@@ -1,0 +1,40 @@
+<div class ="row">
+
+  <h1 class="h2">
+    {{ partial "issue-badge.html" $.Page }}
+    {{ $.Page.Params.title | markdownify }}
+    <span class="text-muted fw-thin">#{{ $.Page.Params.number }}</span>
+  </h1>
+
+
+  <span>
+  {{ if eq $.Page.Params.is_pr "true" }}
+    <b>{{ $.Page.Params.author.name }}</b>
+    wants to merge
+    {{ $.Page.Params.pr.commits }}
+    commits into
+    <span class="badge text-bg-info">{{ $.Page.Params.pr.base_label }}</span>
+    from
+    <span class="badge text-bg-info">{{ $.Page.Params.pr.head_label }}</span>
+    changing
+    {{ $.Page.Params.pr.changed_files }}
+    files
+    (<span class="text-success">+{{ $.Page.Params.pr.additions }}</span> <span class="text-danger">−{{ $.Page.Params.pr.deletions }}</span>)
+
+  {{ else }}
+
+    <b>{{ $.Page.Params.author.name }}</b>
+    opened this issue on
+    {{ $.Page.Params.date | time.Format ":date_long" }}
+    ·
+    {{ $.Page.Params.comments }}
+    comments
+
+  {{ end }}
+    ·
+    <span>{{ partial "issue-labels.html" $.Page }}</span>
+  </span>
+
+  <hr>
+
+</div>

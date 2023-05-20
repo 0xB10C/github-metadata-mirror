@@ -1,0 +1,8 @@
+baseURL = 'http://example.org/'
+languageCode = 'en-us'
+title = 'Bitcoin Core GitHub mirror'
+paginate = 50
+
+[taxonomies]
+category = "author"
+tag = "labels"

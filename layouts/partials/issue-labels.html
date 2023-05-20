@@ -1,0 +1,5 @@
+{{ range $label := .Params.labels }}
+  <a href="/labels/{{ urlize $label }}" class="text-decoration-none">
+    <span class="badge text-bg-secondary">{{ $label }}</span>
+  </a>
+{{ end }}

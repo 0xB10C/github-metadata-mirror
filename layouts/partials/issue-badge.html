@@ -1,0 +1,20 @@
+{{ $is_pr := .Params.is_pr }}
+{{ $state := .Params.state }}
+{{ $state_reason := .Params.state_reason }}
+
+<span class="badge rounded-pill
+  {{ if eq $state "closed" }}
+    {{ if eq $state_reason "completed" }}
+      state-complete
+    {{ else }}
+      state-closed
+    {{ end }}
+  {{ else }}
+    state-open
+  {{ end }}">
+  {{ if $is_pr }}
+    pull
+  {{ else }}
+    issue
+  {{ end }}
+</span>

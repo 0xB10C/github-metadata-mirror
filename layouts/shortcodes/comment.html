@@ -1,0 +1,15 @@
+<div class="row">
+  <div class="col-1 px-1">
+    <img src={{ .Get "avatar_url" }} height=52 class="rounded-5 d-block float-end">
+  </div>
+  <div class="col-11">
+    <div class="card">
+      <div class="card-header">
+        <b>{{ .Get "author" }}</b> commented at {{ .Get "date" | time.Format ":time_short" }} on {{ .Get "date" | time.Format ":date_long" }}:
+      </div>
+      <div class="card-body">
+        <p class="card-text my-0">{{ .Inner | markdownify }}</p>
+      </div>
+    </div>
+  </div>
+</div>

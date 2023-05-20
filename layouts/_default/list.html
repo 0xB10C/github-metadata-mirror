@@ -1,0 +1,33 @@
+{{- define "main" -}}
+
+<h1>{{ .Title }}</h1>
+
+<div class="list-group">
+{{ range (.Paginate .RegularPagesRecursive).Pages }}
+  <div class="list-group-item">
+    <div class="d-flex w-100 justify-content-between my-1">
+      <a href="{{ .Permalink }}" class="text-decoration-none text-reset">
+        <h5 class="m-0">
+          {{ partial "issue-badge.html" . }}
+          {{ .Title | markdownify }}
+        </h5>
+      </a>
+    </div>
+    {{ $customDateFormat := "January 2, 2006" }}
+    <span>
+      #{{ .Params.number }}
+      opened by
+      <a href="/author/{{ urlize .Params.author.name }}" class="text-decoration-none text-reset"><b>{{ .Params.author.name }}</b></a>
+      on
+      {{ .PublishDate.Format $customDateFormat }}
+      <span> • </span>
+      <span>{{ partial "issue-labels.html" . }}</span>
+    </span>
+  </div>
+{{ end }}
+</div>
+<nav>
+  {{ template "_internal/pagination.html" . }}
+</nav>
+
+{{- end -}}
