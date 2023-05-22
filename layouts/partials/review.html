@@ -1,0 +1,75 @@
+{{ $number := .number }}
+
+<div class="row">
+
+  {{/*
+    extract the line number from the hunk 
+    i.e., from @@ -48,6 +61,33 @@
+    extract line number 61
+  */}}
+  {{ $a := index (split .event.hunk "@@") 1 }}
+  {{ $b := index (split $a " " ) 2 }}
+  {{ $c := index (split $b "," ) 0 }}
+
+  {{ $line_number_str := replace $c "+" "" }}
+
+  <details class="card px-0" {{ if eq .original_commit .commit }}open{{ end }}>
+    <summary class="card-header justify-content-between">
+      <span class="text-wrap">
+        in
+        <span class="font-monospace text-wrap">{{ .event.path }}:{{ $line_number_str }}</span>
+        in
+        <span class="font-monospace text-wrap">{{ truncate 10 "" .event.original_commit }}</span>
+      </span>
+      {{ if ne .event.original_commit .event.commit }}
+        <span class="badge">outdated</span>
+      {{ end }}
+    </summary>
+    <div class="card-body">
+      {{/* if possible, substract 1 from the line number as we have the diff info in the first line */}}
+      {{ $line_number := 0 }}
+      {{ if ne $line_number_str "" }}
+        {{ $line_number = int $line_number_str }}
+        {{ $line_number = sub $line_number 1 }}
+        {{ $line_number_str = string $line_number }}
+      {{ end }}
+
+      {{ $options := printf "lineNos=true, linenostart=%s" $line_number_str }}
+      {{ transform.Highlight .event.hunk "patch" $options }}
+
+      <hr class="p-0 m-0">
+      {{ range .event.comments }}
+
+        <div class="row">
+          <div class="col-1"></div>
+          <div class="col-11">
+            <hr width="1" size="20" style="border: 1px solid gray; margin: 0em 2em;" />
+          </div>
+        </div>
+
+        <div class="row" id="discussion_r{{ .id | string }}">
+          <div class="col-1 px-0 px-md-3">
+            <img src={{ .author.avatar_url }} class="rounded-5 d-block float-end img-thumbnail">
+          </div>
+          <div class="col-11">
+            <div class="card">
+              <div class="card-header d-flex justify-content-between">
+                <span>
+                  <a href="/contributor/{{ urlize .author.name }}" class="text-decoration-none text-reset"><b>{{ .author.name }}</b></a>
+                  commented at {{ .date | time.Format ":time_short" }} on {{ .date | time.Format ":date_long" }}:
+                </span>
+                <span>
+                  <a href="https://github.com/bitcoin/bitcoin/pull/{{ $number }}#discussion_r{{ .id | string }}" class="text-decoration-none text-reset">⮵</a>
+                  <a href="#discussion_r{{ .id | string }}" class="text-decoration-none text-reset">#</a>
+                </span>
+              </div>
+            <div class="card-body">
+              {{ partial "comment-body.html" . }}
+              {{ partial "reactions.html" .event.reactions }}
+            </div>
+          </div>
+        </div>
+      </div>
+    {{ end }}
+  </details>
+</div>

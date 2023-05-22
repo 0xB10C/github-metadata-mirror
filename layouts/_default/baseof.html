@@ -4,13 +4,16 @@
 {{ partial "head.html" . }}
 
 <body>
-  {{ partial "nav.html" . }}
+  {{ partialCached "nav.html" . }}
 
   <div class="container">
     <article>
       {{ block "main" . }}{{ end }}
     </article>
+
+    {{ partial "footer.html" . }}
   </div>
+
 
 </body>
 

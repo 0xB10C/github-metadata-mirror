@@ -1,0 +1,143 @@
+<div class="container">
+
+<div class="row">
+
+  <h1 class="h3">
+    <span class="text-light">{{ $.Page.Params.title | markdownify }}</span>
+    <span class="text-muted fw-thin">#{{ $.Page.Params.number }}</span>
+    <a href="https://github.com/bitcoin/bitcoin/issues/{{ $.Page.Params.number }}" class="text-decoration-none fs-4">⮵</a>
+  </h1>
+
+  <span>
+    <span class="h4">{{ partial "issue-badge.html" $.Page }}</span>
+    <a href="/contributor/{{ lower $.Page.Params.user.name }}" class="text-decoration-none text-reset"><b>{{ $.Page.Params.user.name }}</b></a>
+    {{ if eq $.Page.Params.is_pr true }}
+      wants to merge
+      {{ $.Page.Params.pr.commits }}
+      commits into
+      <span class="badge">{{ $.Page.Params.pr.base_label }}</span>
+      from
+      <span class="badge">{{ $.Page.Params.pr.head_label }}</span>
+      changing
+      {{ $.Page.Params.pr.changed_files }}
+      files
+      <span class="badge"><span class="text-success">+{{ $.Page.Params.pr.additions }}</span> <span class="text-danger">−{{ $.Page.Params.pr.deletions }}</span> </span>
+
+      <ul class="nav nav-tabs mt-3">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Conversation</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-reset" href="https://github.com/bitcoin/bitcoin/pull/{{ string $.Page.Params.number }}/commits/">Commits<span class="badge text-reset">{{ $.Page.Params.pr.commits }}</span> ⮵</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-reset" href="https://github.com/bitcoin/bitcoin/pull/{{ string $.Page.Params.number }}/files/">Files<span class="badge text-reset">{{ $.Page.Params.pr.changed_files }}</span> ⮵</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-reset" href="https://github.com/bitcoin/bitcoin/pull/{{ string $.Page.Params.number }}/checks/">Checks ⮵</a>
+        </li>
+      </ul>
+
+    {{ else }}
+
+      opened this issue on
+      {{ $.Page.Params.date | time.Format ":date_long" }}
+      ·
+      {{ sub ($.Page.Params.timeline | len) 1 }}
+      comments
+      <hr class="my-3">
+    {{ end }}
+  </span>
+
+</div>
+
+{{ $contributors := newScratch }}
+
+<div class="container my-3">
+  <div class="row">
+    <div class="col col-md-9">
+      {{ range $index, $event := $.Page.Params.timeline }}
+
+        {{ if ne $index 0 }}
+          <div class="row">
+            <div class="col-1"></div>
+            <div class="col-11">
+              <hr width="1" size="40" style="border: 1px solid gray; margin: 0em 2em;" />
+            </div>
+          </div>
+        {{ end }}
+
+        {{ if eq $event.type "comment" }}
+          {{ $contributors.Add "c" (slice $event.author) }}
+          {{ partial "comment.html"  (dict "event" $event "number" $.Page.Params.number ) }}
+        {{ else if eq $event.type "review" }}
+          {{ partial "review.html" (dict "event" $event "number" $.Page.Params.number ) }}
+          {{ range $event.comments }}
+            {{ $contributors.Add "c" (slice .author) }}
+          {{ end }}
+        {{ else if eq $event.type "close" }}
+            <div class="row">
+              <div class="col-1"></div>
+              <div class="col-11">
+                <span style="margin: 0em 0.75em;">
+                  {{ if eq $.Page.Params.state "merged" }}
+                    <span class="badge fs-5 state-merged">✓</span>
+                    merged into <span class="badge text-bg-info">{{ $.Page.Params.pr.base_label }}</span>  by {{ $.Page.Params.closed_by.name }} on {{ $.Page.Params.pr.merged_at | time.Format ":date_medium" }}
+                  {{ else }}
+                    <span class="badge fs-5 state-closed">●</span>
+                    <b>{{ $.Page.Params.closed_by.name }}</b>
+                    closed this on
+                    {{ $.Page.Params.closed_at | time.Format ":date_medium" }}
+                  {{ end }}
+                </span>
+              </div>
+            </div>
+        {{ else }}
+          <span class="badge text-bg-danger">unhandled timeline event<span>
+        {{ end }}
+      {{ end }}
+    </div>
+    <div class="col col-md-3">
+      <p class="m-3">
+        <label>Contributors</label>
+        <br>
+          {{ range $c := (uniq ($contributors.Get "c")) }}
+            {{ if $c }}
+              <a href="/contributor/{{ urlize .name }}" class="d-inline-block text-decoration-none text-reset m-1">
+                <img src="{{ .avatar_url }}" class="img-fluid rounded-5" width=24>
+                <span class="text-reset text-decoration-none">{{ .name }}</span>
+              </a>
+            {{ end }}
+          {{ end }}
+        </p>
+      {{ if (and (eq $.Page.Params.is_pr true) (ne 0 ($.Page.Params.pr.requested | len))) }}
+        <p class="m-3">
+          <label>Review Requested</label>
+          <br>
+          {{ range $.Page.Params.pr.requested }}
+            <a href="/contributor/{{ urlize .name }}" class="text-decoration-none text-reset m-2">
+              <img src="{{ .avatar_url }}" class="img-fluid rounded-5" width=24>
+              <span class="text-reset text-decoration-none">{{ .name }}</span>
+            </a>
+          {{ end }}
+        </p>
+      {{ end }}
+      {{ if (ne 0 ($.Page.Params.labels | len)) }}
+        <p class="m-3">
+          <span>Labels</span>
+          <br>
+          <span>{{ partial "issue-labels.html" $.Page }}</span>
+        </p>
+      {{ end }}
+      {{ if $.Page.Params.milestone_info }}
+        <p class="m-3">
+          <span>Milestone</span>
+          <br>
+          <span class="badge state-{{ $.Page.Params.milestone_info.state }}">
+          {{ $.Page.Params.milestone_info.title }}
+          </span>
+        </p>
+      {{ end }}
+    </div>
+  </div>
+</div>

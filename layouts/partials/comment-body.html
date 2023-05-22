@@ -1,0 +1,18 @@
+{{/*
+- rewrite links to issues/pulls or comments to the local site
+- rewrite @username to contributor (best-effort)
+*/}}
+
+{{ $body := replaceRE `(\s|^)#([0-9]+)(\s|$)` "$1[#$2 (local)](/$2)$3" .body }}
+
+{{ $body = emojify $body }}
+
+{{ $body = replaceRE `\[([a-zA-Z0-9]+)\]\(https://github.com/bitcoin/bitcoin/pull/([0-9]+)#issuecomment-([0-9]+)` " [$1](/$2/#issuecomment-$3" $body }}
+
+{{ $body = replaceRE `https://github.com/bitcoin/bitcoin/pull/([0-9]+)#issuecomment-([0-9]+)` " [#$1 (comment; local)](/$1#issuecomment-$2)" $body }}
+{{ $body = replaceRE `https://github.com/bitcoin/bitcoin/pull/([0-9]+)#discussion_r([0-9]+)` " [#$1 (review; local)](/$1#discussion_r$2)" $body }}
+{{ $body = replaceRE `\shttps://github.com/bitcoin/bitcoin/pull/([0-9]+)(\s|$|\.|,)` " [#$1 (local)](/$1)$2" $body }}
+
+{{ $body = replaceRE `(\s|^)@([a-zA-Z0-9]+)` " [@$2 (local)](/contributor/$2)" $body }}
+
+{{- ($body | markdownify) -}}

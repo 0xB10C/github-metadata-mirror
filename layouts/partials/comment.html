@@ -1,0 +1,26 @@
+<div class="row">
+  <div class="col-1 px-0 px-md-3">
+    <a href="/contributor/{{ urlize .event.author.name }}">
+      <img src={{ .event.author.avatar_url }} class="rounded-5 d-block float-end img-thumbnail">
+    </a>
+  </div>
+  <div class="col-11">
+    <div class="card" id="issuecomment-{{ .id | string }}">
+      <div class="card-header d-flex justify-content-between">
+        <span>
+          <a href="/contributor/{{ urlize .event.author.name }}" class="text-decoration-none text-reset"><b>{{ .event.author.name }}</b></a>
+          commented at {{ .event.date | time.Format ":time_short" }} on {{ .event.date | time.Format ":date_long" }}:
+        </span>
+        <span>
+          <span class="badge">{{ lower .event.author_association }}</span>
+          <a href="https://github.com/bitcoin/bitcoin/pull/{{ .number }}#issuecomment-{{ .event.id | string }}" class="text-decoration-none text-reset">⮵</a>
+          <a href="#issuecomment-{{ .event.id | string }}" class="text-decoration-none text-reset">#</a>
+        </span>
+      </div>
+      <div class="card-body py-2">
+        {{ partial "comment-body.html" .event }}
+        {{ partial "reactions.html" .event.reactions }}
+      </div>
+    </div>
+  </div>
+</div>

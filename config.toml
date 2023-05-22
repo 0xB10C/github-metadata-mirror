@@ -1,8 +1,24 @@
-baseURL = 'http://example.org/'
 languageCode = 'en-us'
 title = 'Bitcoin Core GitHub mirror'
-paginate = 50
+paginate = 100
 
 [taxonomies]
-category = "author"
-tag = "labels"
+  category = "contributor"
+  tag = "labels"
+  series = 'milestone'
+
+
+[outputs]
+  home = ["HTML", "JSON"]
+
+[markup]
+  [markup.highlight]
+    codeFences = true
+    guessSyntax = true
+    lineAnchors = ''
+    lineNoStart = 0
+    lineNos = true
+    lineNumbersInTable = false
+    noClasses = true
+    style = 'github-dark'
+    tabWidth = 2

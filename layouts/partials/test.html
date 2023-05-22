@@ -1,0 +1,94 @@
+
+<h2>Test cases for regexes for issues, comments, and @mentions</h2>
+
+{{ $testcases := (slice
+  (dict
+    "body"      "normal text"
+    "expected"  "normal text"
+    "match"     true)
+  (dict
+    "body"      "normal text"
+    "expected"  "bad text"
+    "match"     false)
+  (dict
+    "body"      "See https://github.com/bitcoin/bitcoin/pull/20233 for details"
+    "expected"  "See <a href=\"/20233\">#20233 (local)</a> for details"
+    "match"     true)
+  (dict
+    "body"      "See https://github.com/bitcoin/bitcoin/pull/20233#issuecomment-715884174 for details"
+    "expected"  "See  <a href=\"/20233#issuecomment-715884174\">#20233 (comment; local)</a> for details"
+    "match"     true)
+  (dict
+    "body"      "my NACK from https://github.com/bitcoin/bitcoin/pull/20205#issuecomment-716544104,"
+    "expected"  "my NACK from  <a href=\"/20205#issuecomment-716544104\">#20205 (comment; local)</a>,"
+    "match"     true)
+  (dict
+    "body"      "my NACK from https://github.com/bitcoin/bitcoin/pull/20205#issuecomment-716544104."
+    "expected"  "my NACK from  <a href=\"/20205#issuecomment-716544104\">#20205 (comment; local)</a>."
+    "match"     true)
+  (dict
+    "body"      "my NACK from https://github.com/bitcoin/bitcoin/pull/20205#issuecomment-716544104 abc"
+    "expected"  "my NACK from  <a href=\"/20205#issuecomment-716544104\">#20205 (comment; local)</a> abc"
+    "match"     true)
+  (dict
+    "body"      "my NACK from https://github.com/bitcoin/bitcoin/pull/20205#issuecomment-716544104!"
+    "expected"  "my NACK from  <a href=\"/20205#issuecomment-716544104\">#20205 (comment; local)</a>!"
+    "match"     true)
+  (dict
+    "body"      "files https://github.com/bitcoin/bitcoin/pull/20205/files-abc"
+    "expected"  "files <a href=\"https://github.com/bitcoin/bitcoin/pull/20205/files-abc\">https://github.com/bitcoin/bitcoin/pull/20205/files-abc</a>"
+    "match"     true)
+  (dict
+    "body"      "at https://github.com/bitcoin/bitcoin/pull/20233#discussion_r682768076."
+    "expected"  "at  <a href=\"/20233#discussion_r682768076\">#20233 (review; local)</a>."
+    "match"     true)
+  (dict
+    "body"      "@0xb10c "
+    "expected"  "<a href=\"/contributor/0xb10c\">@0xb10c (local)</a>"
+    "match"     true)
+  (dict
+    "body"      "@test1 @test2 @test3"
+    "expected"  "<a href=\"/contributor/test1\">@test1 (local)</a> <a href=\"/contributor/test2\">@test2 (local)</a> <a href=\"/contributor/test3\">@test3 (local)</a>"
+    "match"     true)
+  (dict
+    "body"      "@test1?? @test2's @test3."
+    "expected"  "<a href=\"/contributor/test1\">@test1 (local)</a>?? <a href=\"/contributor/test2\">@test2 (local)</a>&rsquo;s <a href=\"/contributor/test3\">@test3 (local)</a>."
+    "match"     true)
+  (dict
+    "body"      "@test1@test2@test3."
+    "expected"  "<a href=\"/contributor/test1\">@test1 (local)</a>@test2@test3."
+    "match"     true)
+)}}
+
+{{ range $index, $case := $testcases }}
+  <div class="row">
+      {{ $result := safeHTML (replace (partial "comment-body.html" . ) "\n" "") }}
+      {{ $expected := safeHTML .expected }}
+
+      <div class="col-1">
+        {{ $index }}
+      </div>
+      <div class="col-2">
+        {{ if eq .match true }}
+          match
+        {{ else }}
+          no match
+        {{ end }}
+      </div>
+      <div class="col-4">
+        {{ safeHTML $result }}
+      </div>
+      <div class="col-4">
+        {{ safeHTML .expected }}
+      </div>
+
+      <div class="col-1">
+        {{ if eq (eq $expected $result) .match }}
+          <span class="badge text-bg-success">ok</span>
+        {{ else }}
+          <span class="badge text-bg-danger">bad</span>
+        {{ end }}
+      </div>
+  </div>
+{{ end }}
+

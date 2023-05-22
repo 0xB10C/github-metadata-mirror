@@ -13,8 +13,52 @@ blockquote:not([class]) {
   padding: 2px 10px;
 }
 
+p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+// There happens to be an empty p element at the bottom of many cards
+// created by the "markdownify" function from hugo. We set the margins
+// for both to 0.
+p:empty {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+p:nth-last-child(2) {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+p > code {
+  color: var(--bs-light);
+  background-color: var(--bs-gray-700);
+  border-radius: 5px;
+  padding: 0.15em;
+}
+
+pre {
+  padding: 1em;
+  margin-bottom: 0em;
+}
+
+table, td, th {
+  border: 1px solid var(--bs-gray-700);
+  padding: 0.4em;
+}
+
 .state-complete {
   background-color: var(--bs-indigo);
+  color: var(--bs-light);
+}
+
+.state-merged {
+  background-color: var(--bs-indigo);
+  color: var(--bs-light);
+}
+
+.state-draft {
+  background-color: var(--bs-gray);
   color: var(--bs-light);
 }
 
