@@ -1,0 +1,504 @@
+{{ $number := .number }}
+{{ $event := .event }}
+
+{{ $name := "unknown" }}
+{{ if ne $event.actor nil }}
+  {{ $name = $event.actor.login }}
+{{ else if ne $event.user nil }}
+  {{ $name = $event.user.login }}
+{{ end }}
+
+
+{{ if eq $event.event "commented" }}
+  {{ if ne $event.body "" }}
+    {{ partial "comment.html" (dict "author" $event.actor "body" $event.body "number" $number "id" $event.id "created_at" $event.created_at  "author_association" $event.author_association) }}
+  {{ end }}
+{{ else if eq $event.event "code_review" }}
+  {{ partial "review.html" (dict "event" $event.data "number" $number) }}
+{{ else if eq $event.event "subscribed" }}
+{{ else if eq $event.event "unsubscribed" }}
+{{ else if eq $event.event "mentioned" }}
+{{ else if eq $event.event "review_dismissed" }}
+{{ else if eq $event.event "connected" }}
+{{ else if eq $event.event "disconnected" }}
+{{ else if eq $event.event "line-commented" }}
+{{ else if eq $event.event "committed" }}
+  <li class="timeline-item mb-4">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#node-plus-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description d-flex justify-content-between w-100">
+        {{ $commit_lines := split $event.message "\n" }}
+        {{ $commit_head := index ( first 1 $commit_lines) 0 }}
+        {{ $commit_message := last (sub ($commit_lines | len) 1) $commit_lines }}
+        {{ if eq ($commit_lines | len) 1 }}
+          <span class="font-monospace">{{ $commit_head }}</span>
+        {{ else }}
+          <details>
+            <summary class="font-monospace">{{ $commit_head }}</summary>
+            <code><pre>
+              {{- delimit $commit_message "\n" | markdownify -}}
+            </pre></code>
+          </details>
+        {{ end }}
+        <span class="">{{ truncate 10 "" $event.sha }}</span>
+    </div>
+  </li>
+{{ else if eq $event.event "head_ref_force_pushed" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#fast-forward-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> force-pushed
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "base_ref_force_pushed" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#fast-forward-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> force-pushed the base branch
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "marked_as_duplicate" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#layers-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> marked this as duplicate
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "pinned" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#geo-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> pinned this
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "unpinned" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#geo"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> unpinned this
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "comment_deleted" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#trash-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> deleted a comment
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "closed" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle state-closed" >
+        <svg width="20" height="20" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#x"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> closed this
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+    <hr>
+  </li>
+{{ else if eq $event.event "added_to_project" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle" >
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#kanban-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> added this to the "{{ $event.project_card.column_name }}" column in a project
+    </div>
+    <hr>
+  </li>
+{{ else if eq $event.event "removed_from_project" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle" >
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#kanban-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> removed this from the "{{ $event.project_card.column_name }}" column in a project
+    </div>
+    <hr>
+  </li>
+{{ else if eq $event.event "moved_columns_in_project" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle" >
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#kanban-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> moved this from the "{{ $event.project_card.previous_column_name }}" to the "{{ $event.project_card.column_name }}" column in a project
+
+    </div>
+    <hr>
+  </li>
+{{ else if eq $event.event "reopened" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle state-open" >
+        <svg width="20" height="20" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#arrow-clockwise"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> reopened this
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+    <hr>
+  </li>
+{{ else if eq $event.event "merged" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle state-merged">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#diagram-2-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> merged this
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "reviewed" }}
+  {{ if ne ( $event.state | lower ) "commented" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          {{ if eq ( $event.state | lower ) "approved" }}
+            <use xlink:href="/img/bootstrap-icons.svg#check-lg"/>
+          {{ else if eq ( $event.state | lower ) "changes_requested" }}
+            <use xlink:href="/img/bootstrap-icons.svg#plus-slash-minus"/>
+          {{ else }}
+            <use xlink:href="/img/bootstrap-icons.svg#question-square-fill"/>
+          {{ end }}
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> {{ $event.state | lower }}
+    </div>
+  </li>
+  {{ end }}
+  {{ if and (ne $event.body "") (ne $event.body nil) }}
+    {{ partial "comment.html" (dict "author" $event.user "body" $event.body "number" $number "id" $event.id "created_at" $event.submitted_at  "author_association" $event.author_association) }}
+  {{ end }}
+{{ else if eq $event.event "assigned" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#signpost-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> assigned <b>{{ $event.assignee.login }}</b>
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "unassigned" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#signpost-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> unassigned <b>{{ $event.assignee.login }}</b>
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "base_ref_changed" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#signpost-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> changed the base branch
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "milestoned" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#signpost-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> added this to the milestone {{ $event.milestone.title }}
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "demilestoned" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#signpost"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> removed this from the milestone {{ $event.milestone.title }}
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "labeled" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#tag-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> added the label
+      {{ partial "render-label.html" $event.label.name }}
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "unlabeled" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#tag"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> removed the label
+      {{ partial "render-label.html" $event.label.name }}
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "convert_to_draft" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#file-earmark"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> marked this as a draft
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "ready_for_review" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#file-earmark-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> marked this as ready for review
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "review_requested" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#person-lines-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $event.review_requester.login }}</b> requested review from <b>{{ $event.requested_reviewer.login }}</b>
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "review_request_removed" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#person-x-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      {{ $event.review_requester.login }} removed review request from {{ $event.requested_reviewer.login }}
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "renamed" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#card-heading"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <span>
+        <b>{{ $name }}</b> renamed this:
+        <br>
+        <s>{{ $event.rename.from }}</s>
+        <br>
+        {{ $event.rename.to }}
+        <br>
+        on {{ $event.created_at | time.Format ":date_medium" }}
+      </span>
+    </div>
+  </li>
+{{ else if eq $event.event "locked" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="15" height="15" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#lock-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> locked this
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "unlocked" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="15" height="15" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#unlock-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> unlocked this
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "head_ref_deleted" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#trash-fill"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> deleted the branch
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "head_ref_restored" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#arrow-clockwise"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> restored the branch
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else if eq $event.event "referenced" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#link-45deg"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> referenced this in commit
+      <a href="{{ replace (replace (replace $event.commit_url "api." "") "/repos" "") "commits" "commit" }}">{{ truncate 10 "" $event.commit_id }}</a>
+      on {{ $event.created_at | time.Format ":date_medium" }}
+    </div>
+  </li>
+{{ else }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="badge text-bg-info">?</span>
+    </span>
+    <div class="timeline-item-description">
+      {{ warnf $event.event }}
+      {{ $event.event }} {{ $name }}
+    </div>
+  </li>
+{{ end }}

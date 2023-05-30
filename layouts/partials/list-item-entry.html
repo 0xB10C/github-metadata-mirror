@@ -10,8 +10,8 @@
       </a>
       <br>
       <span>
-        <a href="/contributor/{{ urlize .Params.user.name }}" class="text-decoration-none text-reset">
-          <b>{{ .Params.user.name }}</b>
+        <a href="/contributor/{{ urlize .Params.contributor }}" class="text-decoration-none text-reset">
+          <b>{{ .Params.contributor }}</b>
         </a>
         on
         {{ .PublishDate.Format $customDateFormat }}

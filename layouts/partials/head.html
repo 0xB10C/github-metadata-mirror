@@ -5,15 +5,16 @@
   {{ hugo.Generator }}
 
   {{ with .Site.Params.description }}
-  <meta name="description" content="{{ . }}">
+    <meta name="description" content="{{ . }}">
   {{ end }}
 
   <link rel="stylesheet" href="/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="/css/bootstrap-icons.css" />
   <script src="/js/bootstrap.min.js"></script>
   <script src="/js/fuzzysort.min.js"></script>
 
   <title>{{ .Title }}</title>
 
-  {{ partial "style.html" . }}
+  {{ partialCached "style.html" . }}
 
 </head>

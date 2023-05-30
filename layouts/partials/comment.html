@@ -1,26 +1,45 @@
-<div class="row">
-  <div class="col-1 px-0 px-md-3">
-    <a href="/contributor/{{ urlize .event.author.name }}">
-      <img src={{ .event.author.avatar_url }} class="rounded-5 d-block float-end img-thumbnail">
+{{ $name := "unknown" }}
+{{ $avatar_url := "?" }}
+
+{{ if ne .author nil }}
+  {{ $name = .author.login }}
+  {{ $avatar_url = .author.avatar_url }}
+{{ end }}
+
+<li class="timeline-item d-block my-3">
+  <span class="timeline-item-icon" style>
+    <a href="/contributor/{{ urlize $name }}">
+      <img src={{ $avatar_url }} class="rounded-5 d-block img-fluid bg-light">
     </a>
-  </div>
-  <div class="col-11">
+  </span>
+  <div class="timeline-item-description" style="margin-top: -42px;">
     <div class="card" id="issuecomment-{{ .id | string }}">
       <div class="card-header d-flex justify-content-between">
         <span>
-          <a href="/contributor/{{ urlize .event.author.name }}" class="text-decoration-none text-reset"><b>{{ .event.author.name }}</b></a>
-          commented at {{ .event.date | time.Format ":time_short" }} on {{ .event.date | time.Format ":date_long" }}:
+          <a href="/contributor/{{ urlize $name }}" class="text-decoration-none text-reset"><b>{{ $name }}</b></a>
+          commented at {{ .created_at | time.Format ":time_short" }} on {{ .created_at | time.Format ":date_long" }}:
         </span>
         <span>
-          <span class="badge">{{ lower .event.author_association }}</span>
-          <a href="https://github.com/bitcoin/bitcoin/pull/{{ .number }}#issuecomment-{{ .event.id | string }}" class="text-decoration-none text-reset">⮵</a>
-          <a href="#issuecomment-{{ .event.id | string }}" class="text-decoration-none text-reset">#</a>
+          <span class="badge">{{ lower .author_association }}</span>
+            <span>
+              <a href="https://github.com/bitcoin/bitcoin/pull/{{ .number }}#issuecomment-{{ .id | string }}" class="text-decoration-none text-reset px-1">
+                <svg width="14" height="14" fill="currentColor">
+                  <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+                </svg>
+              </a>
+              <a href="#issuecomment-{{ .id | string }}" class="text-decoration-none text-reset px-1">
+                <svg width="14" height="14" fill="currentColor">
+                  <use xlink:href="/img/bootstrap-icons.svg#share"/>
+                </svg>
+              </a>
+            </span>
+          </span>
         </span>
       </div>
-      <div class="card-body py-2">
-        {{ partial "comment-body.html" .event }}
-        {{ partial "reactions.html" .event.reactions }}
+      <div class="card-body py-2 body-text">
+        {{ partial "comment-body.html" . }}
+        {{/* partial "reactions.html" .event.reactions */}}
       </div>
     </div>
   </div>
-</div>
+</li>

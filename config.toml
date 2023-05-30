@@ -2,11 +2,13 @@ languageCode = 'en-us'
 title = 'Bitcoin Core GitHub mirror'
 paginate = 100
 
+timeout = "60s"
+
+disableKinds = ["RSS"]
+
 [taxonomies]
   category = "contributor"
   tag = "labels"
-  series = 'milestone'
-
 
 [outputs]
   home = ["HTML", "JSON"]

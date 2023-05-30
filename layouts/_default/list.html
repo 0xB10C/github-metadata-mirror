@@ -1,6 +1,6 @@
 {{- define "main" -}}
 
-{{ $MAX_ENTRIES_RENDERED := 600 }}
+{{ $MAX_ENTRIES_RENDERED := 10 }}
 
 {{ $entries := where .Site.RegularPages "Section" "entries" }}
 
@@ -26,17 +26,17 @@
       <a href="{{ "labels" | absURL }}" class="text-reset text-decoration-none"><b>Labels</b></a>
       <div class="justify-content-start d-flex flex-wrap">
         {{- range $.Site.Taxonomies.labels.ByCount -}}
-          <a href="{{ .Page.RelPermalink }}" class="m-1 text-decoration-none text-reset btn btn-outline-secondary rounded-5">
-            {{ .Term }}
+          <a href="{{ .Page.RelPermalink }}" class="text-decoration-none text-reset m-1">
+            {{ partial "render-label.html" .Term }}
           </a>
         {{ end }}
       </div>
       <hr>
       <a href="{{ "contributors" | absURL }}" class="text-reset text-decoration-none"><b>Contributors</b></a>
       <div class="justify-content-start d-flex flex-wrap">
-        {{- range first 31 $.Site.Taxonomies.contributor.ByCount -}}
+        {{- range first 29 $.Site.Taxonomies.contributor.ByCount -}}
           <a href="{{ .Page.RelPermalink }}" class="m-1 text-decoration-none text-reset">
-            <img src="{{ (index .Page.Data.category 0).Params.user.avatar_url }}" style="max-width: 32px" class="img-fluid rounded-5" alt="{{ .Page.Title }} profile picture">
+            <img src="{{ (index .Page.Data.category 0).Params.avatar_url }}" style="max-width: 32px" class="img-fluid rounded-5 bg-light" alt="{{ .Page.Title }} profile picture">
           </a>
         {{ end }}
         <a href="{{ "contributors" | absURL }}" class="btn btn-outline-secondary rounded-5">…</a>
@@ -54,7 +54,6 @@
       <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3">
         {{- range $.Site.Taxonomies.contributor.ByCount -}}
 
-
           {{ if gt .Count 2 }}
 
           <div class="col my-2">
@@ -62,31 +61,22 @@
               <div class="card">
                 <div class="row g-0">
                   <div class="col-md-3">
-                    <img src="{{ (index .Page.Data.category 0).Params.user.avatar_url }}" height=32 class="img-fluid rounded-start" alt="{{ .Page.Title }} profile picture">
+                    <img src="{{ (index .Page.Data.category 0).Params.avatar_url }}" height=32 class="img-fluid rounded-start bg-light" alt="{{ .Page.Title }} profile picture">
                   </div>
                   <div class="col-md-9">
                     <div class="card-body">
                       <h5 class="card-title">
                         {{ .Page.Title }}
                       </h5>
-                          {{ $pulls := where .Page.Data.category ".Params.is_pr" true }}
-                          {{ $issues := where .Page.Data.category ".Params.is_pr" false }}
-                          {{ $open := where .Page.Data.category ".Params.state" "open" }}
-                          {{ $closed := where .Page.Data.category ".Params.state" "closed" }}
-
-                          {{ $open_issues := intersect $issues $open | len }}
-                          {{ $closed_issues := intersect $issues $closed | len }}
-                          {{ $open_pulls := intersect $pulls $open | len }}
-                          {{ $closed_pulls := intersect $pulls $closed | len }}
-                          <span>
-                            {{ $open_pulls }} open pulls
-                            {{ if ne $closed_pulls 0 }} ({{ $closed_pulls }} closed) {{ end }}
-                          </span>
-                          <br>
-                          <span>
-                            {{ $open_issues }} open issues
-                            {{ if ne $closed_issues 0 }} ({{ $closed_issues }} closed) {{ end }}
-                          </span>
+                      {{ $pulls := where .Page.Data.category ".Params.is_pr" true }}
+                      {{ $issues := where .Page.Data.category ".Params.is_pr" false }}
+                      <span>
+                        {{ $pulls | len }} pulls
+                      </span>
+                      <br>
+                      <span>
+                        {{ $issues | len }} issues
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -111,21 +101,6 @@
           </div>
         {{ end }}
       </div>
-  {{ else if eq .Section "milestone" }}
-      <div class="row row-cols-3">
-        {{- range $.Site.Taxonomies.milestone -}}
-          <div class="col my-2">
-            <a href="{{ .Page.RelPermalink }}" class="text-decoration-none text-reset">
-              <div class="card">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                  {{ .Page.Title }}
-                  <span class="badge text-bg-primary">{{ .Count }}</span>
-                </div>
-              </div>
-            </a>
-          </div>
-        {{ end }}
-      </div>
   {{ else }}
     not implemented
   {{ end }}
@@ -136,48 +111,29 @@
 
   {{ if eq .Section "contributor" }}
     <p>
-      <img src="{{ (index .Page.Data.category 0).Params.user.avatar_url }}" width=96 class="img-fluid rounded-5 mx-3" alt="{{ .Page.Title }} profile picture">
+      <img src="{{ (index .Page.Data.category 0).Params.avatar_url }}" width=96 class="img-fluid rounded-5 mx-3 bg-light" alt="{{ .Page.Title }} profile picture">
       <span class="h2">{{ .Title }}</span>
-      <a href="https://github.com/{{ .Title }}" class="text-decoration-none fs-4">⮵</a>
+      <a href="https://github.com/{{ .Title }}" class="text-decoration-none fs-4 text-reset">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+        </svg>
+      </a>
     </p>
 
     {{ $pulls := where .Page.Data.category ".Params.is_pr" true }}
     {{ $issues := where .Page.Data.category ".Params.is_pr" false }}
-    {{ $open := where .Page.Data.category ".Params.state" "open" }}
-    {{ $closed := where .Page.Data.category ".Params.state" "closed" }}
-
-    {{ $open_issues := intersect $issues $open }}
-    {{ $closed_issues := intersect $issues $closed }}
-    {{ $open_pulls := intersect $pulls $open }}
-    {{ $closed_pulls := intersect $pulls $closed  }}
-
 
     <div class="container">
       <div class="row">
         <div class="col-12 col-md-6">
           <div class="list-group my-3">
             <span class="list-group-item " aria-disabled="true">
-              Open Pull-Requests
+              Pull-Requests
             </span>
-            {{ if eq 0 ($open_pulls | len)}}
-              <span class="list-group-item text-center" aria-disabled="true">
-                ---
-              </span>
+            {{ if eq 0 ($pulls | len)}}
+              <span class="list-group-item text-center" aria-disabled="true">---</span>
             {{ end }}
-            {{ range $open_pulls }}
-              {{ partial "list-item-entry.html" . }}
-            {{ end }}
-          </div>
-          <div class="list-group my-3">
-            <span class="list-group-item" aria-disabled="true">
-              Closed Pull-Requests
-            </span>
-            {{ if eq 0 ($closed_pulls | len)}}
-              <span class="list-group-item text-center" aria-disabled="true">
-                ---
-              </span>
-            {{ end }}
-            {{ range $closed_pulls }}
+            {{ range $pulls }}
               {{ partial "list-item-entry.html" . }}
             {{ end }}
           </div>
@@ -185,58 +141,29 @@
         <div class="col-12 col-md-6">
           <div class="list-group my-3">
             <span class="list-group-item" aria-disabled="true">
-              Open Issues
+              Issues
             </span>
-            {{ if eq 0 ($open_issues | len)}}
+            {{ if eq 0 ($issues | len)}}
               <span class="list-group-item text-center" aria-disabled="true">---</span>
             {{ end }}
-            {{ range $open_issues }}
+            {{ range $issues }}
               {{ partial "list-item-entry.html" . }}
             {{ end }}
           </div>
-          <div class="list-group my-3">
-            <span class="list-group-item" aria-disabled="true">
-              Closed Issues
-            </span>
-            {{ if eq 0 ($closed_issues | len)}}
-              <span class="list-group-item text-center" aria-disabled="true">---</span>
-            {{ end }}
-            {{ range $closed_issues }}
-              {{ partial "list-item-entry.html" . }}
-            {{ end }}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="container">
-      <div class="row">
-        <div class="col-12 col-sm-6">
-        </div>
-        <div class="col-12 col-sm-6">
         </div>
       </div>
     </div>
 
   {{ else if eq .Section "labels" }}
     <h2>
-      Labeled <span class="border rounded-5 px-3">{{ .Title }}</span>
+      Labeled
+      {{ partial "render-label.html" .Title }}
     </h2>
     <div class="list-group list-group-flush">
       {{ range .Paginator.Pages }}
         {{ partial "list-item-entry.html" . }}
       {{ end }}
     </div>
-  {{ else if eq .Section "milestone" }}
-    <h2>
-      Milestone <span>{{ .Title }}</span>
-    </h2>
-    <div class="list-group list-group-flush">
-      {{ range .Paginator.Pages }}
-        {{ partial "list-item-entry.html" . }}
-      {{ end }}
-    </div>
-  {{ else }}
     Unhandled Section
   {{ end }}
 

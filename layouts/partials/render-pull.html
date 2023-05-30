@@ -1,0 +1,134 @@
+{{ $number := $.Page.Params.number }}
+
+{{ $data := index .Site.Data.test (string $number) }}
+
+{{ $pull := $data.pull }}
+{{ $timeline := $data.events }}
+
+<div class="container">
+
+<div class="row">
+
+  <h1 class="h3">
+    <span class="text-light">{{ $.Page.Params.title | markdownify }}</span>
+    <span class="text-muted fw-thin">#{{ $.Page.Params.number }}</span>
+    <a href="https://github.com/bitcoin/bitcoin/issues/{{ $.Page.Params.number }}" class="text-decoration-none text-reset fs-4">
+      <svg width="16" height="16" fill="currentColor">
+        <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+      </svg>
+    </a>
+  </h1>
+
+  <span>
+    <span class="h4">{{ partial "issue-badge.html" $.Page }}</span>
+    <a href="/contributor/{{ lower $pull.user.login }}" class="text-decoration-none text-reset"><b>{{ $pull.user.login }}</b></a>
+      wants to merge
+      {{ $pull.commits }}
+      commits into
+      <span class="badge">{{ $pull.base.label }}</span>
+      from
+      <span class="badge">{{ $pull.head.label }}</span>
+      changing
+      {{ $pull.changed_files }}
+      files
+      <span class="badge"><span class="text-success">+{{ $pull.additions }}</span> <span class="text-danger">−{{ $pull.deletions }}</span> </span>
+
+      <ul class="nav nav-tabs mt-3">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Conversation</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-reset" href="https://github.com/bitcoin/bitcoin/pull/{{ string $.Page.Params.number }}/commits/">Commits<span class="badge text-reset">{{ $pull.commits }}</span>
+            <svg width="12" height="12" fill="currentColor">
+              <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+            </svg>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-reset" href="https://github.com/bitcoin/bitcoin/pull/{{ string $.Page.Params.number }}/files/">Files<span class="badge text-reset">{{ $pull.changed_files }}</span>
+            <svg width="12" height="12" fill="currentColor">
+              <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+            </svg>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-reset" href="https://github.com/bitcoin/bitcoin/pull/{{ string $.Page.Params.number }}/checks/">Check 
+            <svg width="12" height="12" fill="currentColor">
+              <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+            </svg>
+          </a>
+        </li>
+      </ul>
+  </span>
+</div>
+
+{{ $contributors := newScratch }}
+
+<div class="container my-3">
+  <div class="row">
+    <div class="col col-lg-9">
+      <ol class="timeline">
+        {{ partial "comment.html" (dict "author" $pull.user "body" $pull.body "number" $pull.number "id" $pull.id "created_at" $pull.created_at  "author_association" $pull.author_association) }}
+        {{ $contributors.Add "c" (slice $pull.user) }}
+
+        {{ range $event := $timeline }}
+          {{ if eq $event.event "commented" }}
+            {{ $contributors.Add "c" ($event.actor) }}
+          {{ else if eq $event.event "reviewed" }}
+            {{ if ne $event.user nil }}
+              {{ $contributors.Add "c" ($event.user) }}
+            {{ end }}
+          {{ else if eq $event.event "code_review" }}
+            {{ range $comment := $event.data }}
+              {{ if ne $comment.user nil }}
+                {{ $contributors.Add "c" ($comment.user) }}
+              {{ end }}
+            {{ end }}
+          {{ end }}
+          {{ partial "render-event.html" (dict "event" $event "number" $number) }}
+        {{ end }}
+      </ol>
+    </div>
+    <div class="col col-lg-3">
+      <p class="m-3">
+        <label>Contributors</label>
+        <br>
+          {{ range $i, $c := (uniq ($contributors.Get "c")) }}
+            <a href="/contributor/{{ urlize $c.login }}" class="d-inline-block text-decoration-none text-reset m-1">
+              <img src="{{ $c.avatar_url }}" class="img-fluid rounded-5" width=24>
+              <span class="text-reset text-decoration-none">{{ $c.login }}</span>
+            </a>
+          {{ end }}
+        </p>
+      {{ if (and (eq $.Page.Params.is_pr true) (ne 0 ($pull.requested_reviewers | len))) }}
+        <p class="m-3">
+          <label>Review Requested</label>
+          <br>
+          {{ range $pull.requested_reviewers }}
+            <a href="/contributor/{{ urlize .login }}" class="text-decoration-none text-reset m-2">
+              <img src="{{ .avatar_url }}" class="img-fluid rounded-5" width=24>
+              <span class="text-reset text-decoration-none">{{ .login }}</span>
+            </a>
+          {{ end }}
+        </p>
+      {{ end }}
+      {{ if (ne 0 ($.Page.Params.labels | len)) }}
+        <p class="m-3">
+          <span>Labels</span>
+          <br>
+          <span>{{ partial "issue-labels.html" $.Page }}</span>
+        </p>
+      {{ end }}
+      {{ if $pull.milestone }}
+        <p class="m-3">
+          <span>Milestone</span>
+          <br>
+          <span class="badge state-{{ $pull.milestone.state }}">
+          {{ $pull.milestone.title }}
+          </span>
+        </p>
+      {{ end }}
+    </div>
+  </div>
+</div>
+

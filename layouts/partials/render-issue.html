@@ -1,0 +1,79 @@
+{{ $number := $.Page.Params.number }}
+
+{{ $data := index .Site.Data.test (string $number) }}
+
+{{ $issue := $data.issue }}
+{{ $timeline := $data.events }}
+
+<div class="container">
+
+<div class="row">
+
+  <h1 class="h3">
+    <span class="text-light">{{ $.Page.Params.title | markdownify }}</span>
+    <span class="text-muted fw-thin">#{{ $.Page.Params.number }}</span>
+    <a href="https://github.com/bitcoin/bitcoin/issues/{{ $.Page.Params.number }}" class="text-decoration-none fs-4 text-reset">
+      <svg width="16" height="16" fill="currentColor">
+        <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+      </svg>
+    </a>
+  </h1>
+
+  <span>
+    <span class="h4">{{ partial "issue-badge.html" $.Page }}</span>
+      <a href="/contributor/{{ lower $issue.user.login }}" class="text-decoration-none text-reset"><b>{{ $issue.user.login }}</b></a>
+      openend this issue on
+      {{ $issue.created_at | time.Format ":date_long" }}
+  </span>
+
+  <hr class="my-2">
+</div>
+
+{{ $contributors := newScratch }}
+
+<div class="container my-3">
+  <div class="row">
+    <div class="col col-lg-9">
+      <ol class="timeline">
+        {{ partial "comment.html" (dict "author" $issue.user "body" $issue.body "number" $issue.number "id" $issue.id "created_at" $issue.created_at  "author_association" $issue.author_association) }}
+        {{ $contributors.Add "c" (slice $issue.user) }}
+
+        {{ range $event := $timeline }}
+          {{ if eq $event.event "commented" }}
+            {{ $contributors.Add "c" ($event.actor) }}
+          {{ end }}
+          {{ partial "render-event.html" (dict "event" $event "number" $number) }}
+        {{ end }}
+      </ol>
+    </div>
+    <div class="col col-lg-3">
+      <p class="m-3">
+        <label>Contributors</label>
+        <br>
+          {{ range $i, $c := (uniq ($contributors.Get "c")) }}
+            <a href="/contributor/{{ urlize $c.login }}" class="d-inline-block text-decoration-none text-reset m-1">
+              <img src="{{ $c.avatar_url }}" class="img-fluid rounded-5" width=24>
+              <span class="text-reset text-decoration-none">{{ $c.login }}</span>
+            </a>
+          {{ end }}
+        </p>
+      {{ if (ne 0 ($.Page.Params.labels | len)) }}
+        <p class="m-3">
+          <span>Labels</span>
+          <br>
+          <span>{{ partial "issue-labels.html" $.Page }}</span>
+        </p>
+      {{ end }}
+      {{ if $issue.milestone }}
+        <p class="m-3">
+          <span>Milestone</span>
+          <br>
+          <span class="badge state-{{ $issue.milestone.state }}">
+          {{ $issue.milestone.title }}
+          </span>
+        </p>
+      {{ end }}
+    </div>
+  </div>
+</div>
+

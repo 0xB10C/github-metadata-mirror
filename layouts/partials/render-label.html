@@ -1,0 +1,3 @@
+{{ $hue := mod (crypto.FNV32a .) 360 }}
+
+<span class="text-small p-1 mx-1 fw-light rounded-2" style="font-size: 0.9em; color: hsl({{ $hue }} 80% 90%); border: 1px solid hsl({{ $hue }} 10% 40%);">{{- . -}}</span>

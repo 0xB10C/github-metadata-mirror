@@ -1,27 +1,41 @@
 {{ $number := .number }}
+{{ $first := index .event 0 }}
 
-<div class="row">
+<li class="timeline-item my-1 d-block">
+  <span class="timeline-item-icon">
+    <span class="timeline-item-icon-circle">
+      <svg width="16" height="16" fill="currentColor">
+        <use xlink:href="/img/bootstrap-icons.svg#braces"/>
+      </svg>
+    </span>
+  </span>
+
+  <div class="timeline-item-description" style="margin-top: -58px;">
+    {{ $name := "unknown" }}
+    {{ if ne $first.user nil }}
+      {{ $name = $first.user.login }}
+    {{ end }}
 
   {{/*
-    extract the line number from the hunk 
+    extract the line number from the hunk
     i.e., from @@ -48,6 +61,33 @@
     extract line number 61
   */}}
-  {{ $a := index (split .event.hunk "@@") 1 }}
+  {{ $a := index (split $first.diff_hunk "@@") 1 }}
   {{ $b := index (split $a " " ) 2 }}
   {{ $c := index (split $b "," ) 0 }}
 
   {{ $line_number_str := replace $c "+" "" }}
 
-  <details class="card px-0" {{ if eq .original_commit .commit }}open{{ end }}>
+  <details class="card my-2 px-0" {{ if eq $first.original_commit_id $first.commit_id }}open{{ end }}>
     <summary class="card-header justify-content-between">
       <span class="text-wrap">
         in
-        <span class="font-monospace text-wrap">{{ .event.path }}:{{ $line_number_str }}</span>
+        <span class="font-monospace text-wrap">{{ $first.path }}:{{ $first.original_line }}</span>
         in
-        <span class="font-monospace text-wrap">{{ truncate 10 "" .event.original_commit }}</span>
+        <span class="font-monospace text-wrap">{{ truncate 10 "" $first.original_commit_id }}</span>
       </span>
-      {{ if ne .event.original_commit .event.commit }}
+      {{ if ne $first.original_commit_id $first.commit_id }}
         <span class="badge">outdated</span>
       {{ end }}
     </summary>
@@ -34,11 +48,26 @@
         {{ $line_number_str = string $line_number }}
       {{ end }}
 
+      {{ $hunk := $first.diff_hunk }}
+      {{ $hunk_lines := split $hunk "\n" }}
+      {{ if gt ($hunk_lines | len) 10 }}
+        {{ $hunk = delimit (last 6 $hunk_lines) "\n" }}
+        {{ $line_number = add $line_number (sub ($hunk_lines | len) 6) }}
+        {{ $line_number_str = string $line_number }}
+      {{ end }}
+
       {{ $options := printf "lineNos=true, linenostart=%s" $line_number_str }}
-      {{ transform.Highlight .event.hunk "patch" $options }}
+      {{ transform.Highlight $hunk "patch" $options }}
 
       <hr class="p-0 m-0">
-      {{ range .event.comments }}
+      {{ range .event }}
+        {{ $name := "unknown" }}
+        {{ $avatar_url := "?" }}
+
+        {{ if ne .user nil }}
+          {{ $name = .user.login }}
+          {{ $avatar_url = .user.avatar_url }}
+        {{ end }}
 
         <div class="row">
           <div class="col-1"></div>
@@ -49,23 +78,31 @@
 
         <div class="row" id="discussion_r{{ .id | string }}">
           <div class="col-1 px-0 px-md-3">
-            <img src={{ .author.avatar_url }} class="rounded-5 d-block float-end img-thumbnail">
+            <img src={{ $avatar_url }} class="rounded-5 d-block float-end img-fluid bg-light">
           </div>
           <div class="col-11">
             <div class="card">
               <div class="card-header d-flex justify-content-between">
                 <span>
-                  <a href="/contributor/{{ urlize .author.name }}" class="text-decoration-none text-reset"><b>{{ .author.name }}</b></a>
-                  commented at {{ .date | time.Format ":time_short" }} on {{ .date | time.Format ":date_long" }}:
+                  <a href="/contributor/{{ urlize $name }}" class="text-decoration-none text-reset"><b>{{ $name }}</b></a>
+                  commented at {{ .created_at | time.Format ":time_short" }} on {{ .created_at | time.Format ":date_long" }}:
                 </span>
                 <span>
-                  <a href="https://github.com/bitcoin/bitcoin/pull/{{ $number }}#discussion_r{{ .id | string }}" class="text-decoration-none text-reset">⮵</a>
-                  <a href="#discussion_r{{ .id | string }}" class="text-decoration-none text-reset">#</a>
+                  <a href="https://github.com/bitcoin/bitcoin/pull/{{ $number }}#discussion_r{{ .id | string }}" class="text-decoration-none text-reset px-1">
+                    <svg width="14" height="14" fill="currentColor">
+                      <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+                    </svg>
+                  </a>
+                  <a href="#discussion_r{{ .id | string }}" class="text-decoration-none text-reset px-1">
+                    <svg width="14" height="14" fill="currentColor">
+                      <use xlink:href="/img/bootstrap-icons.svg#share"/>
+                    </svg>
+                  </a>
                 </span>
               </div>
-            <div class="card-body">
+            <div class="card-body body-text">
               {{ partial "comment-body.html" . }}
-              {{ partial "reactions.html" .event.reactions }}
+              {{/* partial "reactions.html" .event.reactions */}}
             </div>
           </div>
         </div>
@@ -73,3 +110,4 @@
     {{ end }}
   </details>
 </div>
+</li>
