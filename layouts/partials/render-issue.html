@@ -1,6 +1,6 @@
 {{ $number := $.Page.Params.number }}
 
-{{ $data := index .Site.Data.test (string $number) }}
+{{ $data := index .Site.Data (string $number) }}
 
 {{ $issue := $data.issue }}
 {{ $timeline := $data.events }}

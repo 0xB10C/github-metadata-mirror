@@ -179,7 +179,7 @@ def write(front, data, output):
     with open(f"{output}/content/entries/{front.number}.md", "w") as f:
         f.write(f"""{front.toJSON()}\n{{{{< render >}}}}""")
         f.close()
-    with open(f"{output}/data/test/{front.number}.json", "w") as f:
+    with open(f"{output}/data/{front.number}.json", "w") as f:
         json_data = json.dumps(data, default=lambda o: o.__dict__, sort_keys=True)
         f.write(json_data)
         f.close()
