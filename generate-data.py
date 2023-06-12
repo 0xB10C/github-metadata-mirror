@@ -33,6 +33,8 @@ class Frontmatter():
 # https://stackoverflow.com/a/34482761/8896600
 def progressbar(it, prefix="", size=60, out=sys.stdout):
     count = len(it)
+    if count < 1:
+        return
     def show(j):
         x = int(size*j/count)
         print(f"{prefix}[{u'█'*x}{('.'*(size-x))}] {j}/{count}", end='\r', file=out, flush=True)
