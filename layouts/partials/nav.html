@@ -6,10 +6,10 @@
     </button>
     <div class="collapse navbar-collapse d-flex justify-content-between">
       <div class="navbar-nav">
-        <a class="nav-link" href="/issues">Issues</a>
-        <a class="nav-link" href="/pulls">Pull Requests</a>
-        <a class="nav-link" href="/labels">Labels</a>
-        <a class="nav-link" href="/contributors">Contributors</a>
+        <a class="nav-link" href="{{ relURL  "/issues" }}">Issues</a>
+        <a class="nav-link" href="{{ relURL "/pulls" }}">Pull Requests</a>
+        <a class="nav-link" href="{{ relURL "/labels" }}">Labels</a>
+        <a class="nav-link" href="{{ relURL "/contributors" }}">Contributors</a>
       </div>
       <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#search-modal">Search</button>
     </div>
