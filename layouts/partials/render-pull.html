@@ -12,16 +12,16 @@
   <h1 class="h3">
     <span class="text-light">{{ $.Page.Params.title | markdownify }}</span>
     <span class="text-muted fw-thin">#{{ $.Page.Params.number }}</span>
-    <a href="https://github.com/bitcoin/bitcoin/issues/{{ $.Page.Params.number }}" class="text-decoration-none text-reset fs-4">
+    <a href="https://github.com/{{ .Site.Params.owner }}/{{ .Site.Params.repository }}/issues/{{ $.Page.Params.number }}" class="text-decoration-none text-reset fs-4">
       <svg width="16" height="16" fill="currentColor">
-        <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+        <use xlink:href="{{ absURL "img" }}/bootstrap-icons.svg#box-arrow-up-right"/>
       </svg>
     </a>
   </h1>
 
   <span>
     <span class="h4">{{ partial "issue-badge.html" $.Page }}</span>
-    <a href="/contributor/{{ lower $pull.user.login }}" class="text-decoration-none text-reset"><b>{{ $pull.user.login }}</b></a>
+    <a href="{{ absURL "contributor" }}/{{ lower $pull.user.login }}/" class="text-decoration-none text-reset"><b>{{ $pull.user.login }}</b></a>
       wants to merge
       {{ $pull.commits }}
       commits into
@@ -38,23 +38,23 @@
           <a class="nav-link active" aria-current="page" href="#">Conversation</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-reset" href="https://github.com/bitcoin/bitcoin/pull/{{ string $.Page.Params.number }}/commits/">Commits<span class="badge text-reset">{{ $pull.commits }}</span>
+          <a class="nav-link text-reset" href="https://github.com/{{ .Site.Params.owner }}/{{ .Site.Params.repository }}/pull/{{ string $.Page.Params.number }}/commits/">Commits<span class="badge text-reset">{{ $pull.commits }}</span>
             <svg width="12" height="12" fill="currentColor">
-              <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+              <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#box-arrow-up-right"/>
             </svg>
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-reset" href="https://github.com/bitcoin/bitcoin/pull/{{ string $.Page.Params.number }}/files/">Files<span class="badge text-reset">{{ $pull.changed_files }}</span>
+          <a class="nav-link text-reset" href="https://github.com/{{ .Site.Params.owner }}/{{ .Site.Params.repository }}/pull/{{ string $.Page.Params.number }}/files/">Files<span class="badge text-reset">{{ $pull.changed_files }}</span>
             <svg width="12" height="12" fill="currentColor">
-              <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+              <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#box-arrow-up-right"/>
             </svg>
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link text-reset" href="https://github.com/bitcoin/bitcoin/pull/{{ string $.Page.Params.number }}/checks/">Check 
+          <a class="nav-link text-reset" href="https://github.com/{{ .Site.Params.owner }}/{{ .Site.Params.repository }}/pull/{{ string $.Page.Params.number }}/checks/">Check 
             <svg width="12" height="12" fill="currentColor">
-              <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+              <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#box-arrow-up-right"/>
             </svg>
           </a>
         </li>
@@ -68,7 +68,7 @@
   <div class="row">
     <div class="col col-lg-9">
       <ol class="timeline">
-        {{ partial "comment.html" (dict "author" $pull.user "body" $pull.body "number" $pull.number "id" $pull.id "created_at" $pull.created_at  "author_association" $pull.author_association) }}
+        {{ partial "comment.html" (dict "author" $pull.user "body" $pull.body "number" $pull.number "id" $pull.id "created_at" $pull.created_at  "author_association" $pull.author_association "owner" $.Site.Params.owner "repository" $.Site.Params.repository) }}
         {{ $contributors.Add "c" (slice $pull.user) }}
 
         {{ range $event := $timeline }}
@@ -85,7 +85,7 @@
               {{ end }}
             {{ end }}
           {{ end }}
-          {{ partial "render-event.html" (dict "event" $event "number" $number) }}
+          {{ partial "render-event.html" (dict "event" $event "number" $number "owner" $.Site.Params.owner "repository" $.Site.Params.repository ) }}
         {{ end }}
       </ol>
     </div>
@@ -94,7 +94,7 @@
         <label>Contributors</label>
         <br>
           {{ range $i, $c := (uniq ($contributors.Get "c")) }}
-            <a href="/contributor/{{ urlize $c.login }}" class="d-inline-block text-decoration-none text-reset m-1">
+            <a href="{{ absURL "contributor" }}/{{ urlize $c.login }}/" class="d-inline-block text-decoration-none text-reset m-1">
               <img src="{{ $c.avatar_url }}" class="img-fluid rounded-5" width=24>
               <span class="text-reset text-decoration-none">{{ $c.login }}</span>
             </a>
@@ -105,7 +105,7 @@
           <label>Review Requested</label>
           <br>
           {{ range $pull.requested_reviewers }}
-            <a href="/contributor/{{ urlize .login }}" class="text-decoration-none text-reset m-2">
+            <a href="{{ absURL "contributor" }}/{{ urlize .login }}/" class="text-decoration-none text-reset m-2">
               <img src="{{ .avatar_url }}" class="img-fluid rounded-5" width=24>
               <span class="text-reset text-decoration-none">{{ .login }}</span>
             </a>

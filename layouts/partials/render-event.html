@@ -1,6 +1,7 @@
 {{ $number := .number }}
 {{ $event := .event }}
 
+
 {{ $name := "unknown" }}
 {{ if ne $event.actor nil }}
   {{ $name = $event.actor.login }}
@@ -11,10 +12,10 @@
 
 {{ if eq $event.event "commented" }}
   {{ if ne $event.body "" }}
-    {{ partial "comment.html" (dict "author" $event.actor "body" $event.body "number" $number "id" $event.id "created_at" $event.created_at  "author_association" $event.author_association) }}
+    {{ partial "comment.html" (dict "author" $event.actor "body" $event.body "number" $number "id" $event.id "created_at" $event.created_at  "author_association" $event.author_association "owner" .owner "repository" .repository) }}
   {{ end }}
 {{ else if eq $event.event "code_review" }}
-  {{ partial "review.html" (dict "event" $event.data "number" $number) }}
+  {{ partial "review.html" (dict "event" $event.data "number" $number "owner" .owner "repository" .repository) }}
 {{ else if eq $event.event "subscribed" }}
 {{ else if eq $event.event "unsubscribed" }}
 {{ else if eq $event.event "mentioned" }}
@@ -27,7 +28,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#node-plus-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#node-plus-fill"/>
         </svg>
       </span>
     </span>
@@ -53,7 +54,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#fast-forward-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#fast-forward-fill"/>
         </svg>
       </span>
     </span>
@@ -67,7 +68,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#fast-forward-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#fast-forward-fill"/>
         </svg>
       </span>
     </span>
@@ -81,7 +82,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#layers-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#layers-fill"/>
         </svg>
       </span>
     </span>
@@ -95,7 +96,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#geo-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#geo-fill"/>
         </svg>
       </span>
     </span>
@@ -109,7 +110,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#geo"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#geo"/>
         </svg>
       </span>
     </span>
@@ -123,7 +124,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#trash-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#trash-fill"/>
         </svg>
       </span>
     </span>
@@ -137,7 +138,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle state-closed" >
         <svg width="20" height="20" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#x"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#x"/>
         </svg>
       </span>
     </span>
@@ -152,7 +153,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle" >
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#kanban-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#kanban-fill"/>
         </svg>
       </span>
     </span>
@@ -166,7 +167,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle" >
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#kanban-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#kanban-fill"/>
         </svg>
       </span>
     </span>
@@ -180,7 +181,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle" >
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#kanban-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#kanban-fill"/>
         </svg>
       </span>
     </span>
@@ -195,7 +196,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle state-open" >
         <svg width="20" height="20" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#arrow-clockwise"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#arrow-clockwise"/>
         </svg>
       </span>
     </span>
@@ -210,7 +211,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle state-merged">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#diagram-2-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#diagram-2-fill"/>
         </svg>
       </span>
     </span>
@@ -226,11 +227,11 @@
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
           {{ if eq ( $event.state | lower ) "approved" }}
-            <use xlink:href="/img/bootstrap-icons.svg#check-lg"/>
+            <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#check-lg"/>
           {{ else if eq ( $event.state | lower ) "changes_requested" }}
-            <use xlink:href="/img/bootstrap-icons.svg#plus-slash-minus"/>
+            <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#plus-slash-minus"/>
           {{ else }}
-            <use xlink:href="/img/bootstrap-icons.svg#question-square-fill"/>
+            <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#question-square-fill"/>
           {{ end }}
         </svg>
       </span>
@@ -241,14 +242,14 @@
   </li>
   {{ end }}
   {{ if and (ne $event.body "") (ne $event.body nil) }}
-    {{ partial "comment.html" (dict "author" $event.user "body" $event.body "number" $number "id" $event.id "created_at" $event.submitted_at  "author_association" $event.author_association) }}
+    {{ partial "comment.html" (dict "author" $event.user "body" $event.body "number" $number "id" $event.id "created_at" $event.submitted_at  "author_association" $event.author_association "owner" .owner "repository" .repository) }}
   {{ end }}
 {{ else if eq $event.event "assigned" }}
   <li class="timeline-item my-1">
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#signpost-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#signpost-fill"/>
         </svg>
       </span>
     </span>
@@ -262,7 +263,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#signpost-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#signpost-fill"/>
         </svg>
       </span>
     </span>
@@ -276,7 +277,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#signpost-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#signpost-fill"/>
         </svg>
       </span>
     </span>
@@ -290,7 +291,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#signpost-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#signpost-fill"/>
         </svg>
       </span>
     </span>
@@ -304,7 +305,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#signpost"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#signpost"/>
         </svg>
       </span>
     </span>
@@ -318,7 +319,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#tag-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#tag-fill"/>
         </svg>
       </span>
     </span>
@@ -333,7 +334,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#tag"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#tag"/>
         </svg>
       </span>
     </span>
@@ -348,7 +349,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#file-earmark"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#file-earmark"/>
         </svg>
       </span>
     </span>
@@ -362,7 +363,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#file-earmark-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#file-earmark-fill"/>
         </svg>
       </span>
     </span>
@@ -376,7 +377,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#person-lines-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#person-lines-fill"/>
         </svg>
       </span>
     </span>
@@ -390,7 +391,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#person-x-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#person-x-fill"/>
         </svg>
       </span>
     </span>
@@ -404,7 +405,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#card-heading"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#card-heading"/>
         </svg>
       </span>
     </span>
@@ -425,7 +426,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="15" height="15" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#lock-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#lock-fill"/>
         </svg>
       </span>
     </span>
@@ -439,7 +440,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="15" height="15" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#unlock-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#unlock-fill"/>
         </svg>
       </span>
     </span>
@@ -453,7 +454,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#trash-fill"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#trash-fill"/>
         </svg>
       </span>
     </span>
@@ -467,7 +468,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#arrow-clockwise"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#arrow-clockwise"/>
         </svg>
       </span>
     </span>
@@ -481,7 +482,7 @@
     <span class="timeline-item-icon">
       <span class="timeline-item-icon-circle">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#link-45deg"/>
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#link-45deg"/>
         </svg>
       </span>
     </span>

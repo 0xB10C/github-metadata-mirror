@@ -1,15 +1,15 @@
 <nav class="navbar navbar-expand-lg bg-body-tertiary mb-3">
   <div class="container">
-    <a class="navbar-brand" href="/">Bitcoin Core GitHub mirror</a>
+    <a class="navbar-brand" href="{{ absURL "" }}">{{ .Site.Title }}</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse d-flex justify-content-between">
       <div class="navbar-nav">
-        <a class="nav-link" href="{{ relURL  "/issues" }}">Issues</a>
-        <a class="nav-link" href="{{ relURL "/pulls" }}">Pull Requests</a>
-        <a class="nav-link" href="{{ relURL "/labels" }}">Labels</a>
-        <a class="nav-link" href="{{ relURL "/contributors" }}">Contributors</a>
+        <a class="nav-link" href="{{ absURL  "issues" }}">Issues</a>
+        <a class="nav-link" href="{{ absURL "pulls" }}">Pull Requests</a>
+        <a class="nav-link" href="{{ absURL "labels" }}">Labels</a>
+        <a class="nav-link" href="{{ absURL "contributors" }}">Contributors</a>
       </div>
       <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#search-modal">Search</button>
     </div>
@@ -46,7 +46,7 @@
       const searchResultTemplate = document.querySelector('#search-result');
       const searchResults = document.querySelector('#search-results');
 
-      fetch('/index.json')
+      fetch('{{ absURL "index.json" }}')
         .then((response) => response.json())
         .then((index) => {
 

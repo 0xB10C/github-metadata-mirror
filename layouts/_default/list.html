@@ -1,11 +1,11 @@
 {{- define "main" -}}
 
-{{ $MAX_ENTRIES_RENDERED := 10 }}
+{{ $MAX_ENTRIES_RENDERED := 1000 }}
 
 {{ $entries := where .Site.RegularPages "Section" "entries" }}
 
 {{ if eq .Kind "home" }}
-  <h1>{{ .Title }}</h1>
+  <h1>Recent Issues and PRs</h1>
 
   <div class="row">
     <div class="col-12 col-lg-8">
@@ -115,7 +115,7 @@
       <span class="h2">{{ .Title }}</span>
       <a href="https://github.com/{{ .Title }}" class="text-decoration-none fs-4 text-reset">
         <svg width="16" height="16" fill="currentColor">
-          <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+          <use xlink:href="{{ absURL "img" }}/bootstrap-icons.svg#box-arrow-up-right"/>
         </svg>
       </a>
     </p>

@@ -1,10 +1,17 @@
 languageCode = 'en-us'
-title = 'Bitcoin Core GitHub mirror'
 paginate = 100
-
 timeout = "60s"
-
 disableKinds = ["RSS"]
+
+# These can be changed here or overwritten with environment variables
+# See https://gohugo.io/getting-started/configuration/#configure-with-environment-variables
+title = "GitHub mirror" # FIXME
+[Params]
+  # owner and repository are used to link to the correct GitHub repo on external links
+  # and to create local links to other mirrored issues and PRs
+  owner = "placeholder-owner" # FIXME
+  repository = "placeholder-repository" # FIXME
+
 
 [taxonomies]
   category = "contributor"

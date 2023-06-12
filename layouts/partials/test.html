@@ -1,6 +1,8 @@
 
 <h2>Test cases for regexes for issues, comments, and @mentions</h2>
 
+{{ $baseURL := (absURL "") }}
+
 {{ $testcases := (slice
   (dict
     "body"      "normal text"
@@ -12,27 +14,31 @@
     "match"     false)
   (dict
     "body"      "See https://github.com/bitcoin/bitcoin/pull/20233 for details"
-    "expected"  "See <a href=\"/20233\">#20233 (local)</a> for details"
+    "expected"  (printf "See <a href=\"%s20233/\">#20233 (local)</a> for details" $baseURL )
     "match"     true)
   (dict
     "body"      "See https://github.com/bitcoin/bitcoin/pull/20233#issuecomment-715884174 for details"
-    "expected"  "See  <a href=\"/20233#issuecomment-715884174\">#20233 (comment; local)</a> for details"
+    "expected"  (printf "See  <a href=\"%s20233/#issuecomment-715884174\">#20233 (comment; local)</a> for details" $baseURL )
     "match"     true)
   (dict
     "body"      "my NACK from https://github.com/bitcoin/bitcoin/pull/20205#issuecomment-716544104,"
-    "expected"  "my NACK from  <a href=\"/20205#issuecomment-716544104\">#20205 (comment; local)</a>,"
+    "expected"  (printf "my NACK from  <a href=\"%s20205/#issuecomment-716544104\">#20205 (comment; local)</a>," $baseURL )
     "match"     true)
   (dict
     "body"      "my NACK from https://github.com/bitcoin/bitcoin/pull/20205#issuecomment-716544104."
-    "expected"  "my NACK from  <a href=\"/20205#issuecomment-716544104\">#20205 (comment; local)</a>."
+    "expected"  (printf "my NACK from  <a href=\"%s20205/#issuecomment-716544104\">#20205 (comment; local)</a>." $baseURL )
     "match"     true)
   (dict
     "body"      "my NACK from https://github.com/bitcoin/bitcoin/pull/20205#issuecomment-716544104 abc"
-    "expected"  "my NACK from  <a href=\"/20205#issuecomment-716544104\">#20205 (comment; local)</a> abc"
+    "expected"  (printf "my NACK from  <a href=\"%s20205/#issuecomment-716544104\">#20205 (comment; local)</a> abc" $baseURL )
     "match"     true)
   (dict
     "body"      "my NACK from https://github.com/bitcoin/bitcoin/pull/20205#issuecomment-716544104!"
-    "expected"  "my NACK from  <a href=\"/20205#issuecomment-716544104\">#20205 (comment; local)</a>!"
+    "expected"  (printf "my NACK from  <a href=\"%s20205/#issuecomment-716544104\">#20205 (comment; local)</a>!" $baseURL )
+    "match"     true)
+  (dict
+    "body"      "interesting owner:repo name https://github.com/Interesting1/name-tesT/pull/20205#issuecomment-716544104!"
+    "expected"  (printf "interesting owner:repo name  <a href=\"%s20205/#issuecomment-716544104\">#20205 (comment; local)</a>!" $baseURL )
     "match"     true)
   (dict
     "body"      "files https://github.com/bitcoin/bitcoin/pull/20205/files-abc"
@@ -40,29 +46,51 @@
     "match"     true)
   (dict
     "body"      "at https://github.com/bitcoin/bitcoin/pull/20233#discussion_r682768076."
-    "expected"  "at  <a href=\"/20233#discussion_r682768076\">#20233 (review; local)</a>."
+    "expected"  (printf "at  <a href=\"%s20233/#discussion_r682768076\">#20233 (review; local)</a>." $baseURL )
     "match"     true)
   (dict
     "body"      "@0xb10c "
-    "expected"  "<a href=\"/contributor/0xb10c\">@0xb10c (local)</a>"
+    "expected"  (printf "  <a href=\"%scontributor/0xb10c/\">@0xb10c (local)</a>" $baseURL )
     "match"     true)
   (dict
     "body"      "@test1 @test2 @test3"
-    "expected"  "<a href=\"/contributor/test1\">@test1 (local)</a> <a href=\"/contributor/test2\">@test2 (local)</a> <a href=\"/contributor/test3\">@test3 (local)</a>"
+    "expected"  (printf "      <a href=\"%scontributor/test1/\">@test1 (local)</a><a href=\"%scontributor/test2/\">@test2 (local)</a><a href=\"%scontributor/test3/\">@test3 (local)</a>" $baseURL $baseURL $baseURL)
     "match"     true)
   (dict
     "body"      "@test1?? @test2's @test3."
-    "expected"  "<a href=\"/contributor/test1\">@test1 (local)</a>?? <a href=\"/contributor/test2\">@test2 (local)</a>&rsquo;s <a href=\"/contributor/test3\">@test3 (local)</a>."
+    "expected"  (printf "      <a href=\"%scontributor/test1/\">@test1 (local)</a>??<a href=\"%scontributor/test2/\">@test2 (local)</a>&rsquo;s<a href=\"%scontributor/test3/\">@test3 (local)</a>." $baseURL $baseURL $baseURL)
     "match"     true)
   (dict
     "body"      "@test1@test2@test3."
-    "expected"  "<a href=\"/contributor/test1\">@test1 (local)</a>@test2@test3."
+    "expected"  (printf "  <a href=\"%scontributor/test1/\">@test1 (local)</a>@test2@test3." $baseURL)
     "match"     true)
   (dict
     "body"      "@t-bast"
-    "expected"  "<a href=\"/contributor/t-bast\">@t-bast (local)</a>"
+    "expected"  (printf "  <a href=\"%scontributor/t-bast/\">@t-bast (local)</a>" $baseURL )
+    "match"     true)
+  (dict
+    "body"      "@MarkoFalke"
+    "expected"  (printf "  <a href=\"%scontributor/markofalke/\">@MarkoFalke (local)</a>" $baseURL )
     "match"     true)
 )}}
+
+<div class="row">
+  <div class="col-1">
+    case
+  </div>
+  <div class="col-2">
+    should match
+  </div>
+  <div class="col-4">
+    got
+  </div>
+  <div class="col-4">
+    expected
+  </div>
+  <div class="col-1">
+    ok?
+  </div>
+</div>
 
 {{ range $index, $case := $testcases }}
   <div class="row">
@@ -80,10 +108,10 @@
         {{ end }}
       </div>
       <div class="col-4">
-        {{ safeHTML $result }}
+        -{{ safeHTML $result }}-
       </div>
       <div class="col-4">
-        {{ safeHTML .expected }}
+        -{{ safeHTML .expected }}-
       </div>
 
       <div class="col-1">

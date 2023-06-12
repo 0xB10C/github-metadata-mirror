@@ -10,7 +10,7 @@
       </a>
       <br>
       <span>
-        <a href="/contributor/{{ urlize .Params.contributor }}" class="text-decoration-none text-reset">
+        <a href="{{ absURL "contributor" }}/{{ (urlize .Params.contributor) }}/" class="text-decoration-none text-reset">
           <b>{{ .Params.contributor }}</b>
         </a>
         on

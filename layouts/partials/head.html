@@ -8,10 +8,10 @@
     <meta name="description" content="{{ . }}">
   {{ end }}
 
-  <link rel="stylesheet" href="{{ relURL "/css/bootstrap.min.css" }}" />
-  <link rel="stylesheet" href="{{ relURL "/css/bootstrap-icons.css" }}" />
-  <script src="{{ relURL "/js/bootstrap.min.js" }}"></script>
-  <script src="/js/fuzzysort.min.js"></script>
+  <link rel="stylesheet" href="{{ absURL "css/bootstrap.min.css" }}" />
+  <link rel="stylesheet" href="{{ absURL "css/bootstrap-icons.css" }}" />
+  <script src="{{ absURL "js/bootstrap.min.js" }}"></script>
+  <script src="{{ absURL "js/fuzzysort.min.js" }}"></script>
 
   <title>{{ .Title }}</title>
 

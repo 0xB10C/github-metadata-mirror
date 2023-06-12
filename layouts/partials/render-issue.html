@@ -12,16 +12,16 @@
   <h1 class="h3">
     <span class="text-light">{{ $.Page.Params.title | markdownify }}</span>
     <span class="text-muted fw-thin">#{{ $.Page.Params.number }}</span>
-    <a href="https://github.com/bitcoin/bitcoin/issues/{{ $.Page.Params.number }}" class="text-decoration-none fs-4 text-reset">
+    <a href="https://github.com/{{ .Site.Params.owner }}/{{ .Site.Params.repository }}/issues/{{ $.Page.Params.number }}" class="text-decoration-none fs-4 text-reset">
       <svg width="16" height="16" fill="currentColor">
-        <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+        <use xlink:href="{{ absURL "img" }}/bootstrap-icons.svg#box-arrow-up-right"/>
       </svg>
     </a>
   </h1>
 
   <span>
     <span class="h4">{{ partial "issue-badge.html" $.Page }}</span>
-      <a href="/contributor/{{ lower $issue.user.login }}" class="text-decoration-none text-reset"><b>{{ $issue.user.login }}</b></a>
+      <a href="{{ absURL "contributor" }}/{{ lower $issue.user.login }}/" class="text-decoration-none text-reset"><b>{{ $issue.user.login }}</b></a>
       openend this issue on
       {{ $issue.created_at | time.Format ":date_long" }}
   </span>
@@ -35,14 +35,14 @@
   <div class="row">
     <div class="col col-lg-9">
       <ol class="timeline">
-        {{ partial "comment.html" (dict "author" $issue.user "body" $issue.body "number" $issue.number "id" $issue.id "created_at" $issue.created_at  "author_association" $issue.author_association) }}
+        {{ partial "comment.html" (dict "author" $issue.user "body" $issue.body "number" $issue.number "id" $issue.id "created_at" $issue.created_at  "author_association" $issue.author_association "owner" $.Site.Params.owner "repository" $.Site.Params.repository) }}
         {{ $contributors.Add "c" (slice $issue.user) }}
 
         {{ range $event := $timeline }}
           {{ if eq $event.event "commented" }}
             {{ $contributors.Add "c" ($event.actor) }}
           {{ end }}
-          {{ partial "render-event.html" (dict "event" $event "number" $number) }}
+          {{ partial "render-event.html" (dict "event" $event "number" $number "owner" $.Site.Params.owner "repository" $.Site.Params.repository ) }}
         {{ end }}
       </ol>
     </div>
@@ -51,7 +51,7 @@
         <label>Contributors</label>
         <br>
           {{ range $i, $c := (uniq ($contributors.Get "c")) }}
-            <a href="/contributor/{{ urlize $c.login }}" class="d-inline-block text-decoration-none text-reset m-1">
+            <a href="{{ absURL "contributor" }}/{{ urlize $c.login }}/" class="d-inline-block text-decoration-none text-reset m-1">
               <img src="{{ $c.avatar_url }}" class="img-fluid rounded-5" width=24>
               <span class="text-reset text-decoration-none">{{ $c.login }}</span>
             </a>

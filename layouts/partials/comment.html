@@ -6,9 +6,13 @@
   {{ $avatar_url = .author.avatar_url }}
 {{ end }}
 
+{{ if eq .owner nil }}
+  {{ warnf "No owner set in comment "}}
+  <span class="text-danger">NO OWNER SET</span>
+{{ end }}
 <li class="timeline-item d-block my-3">
   <span class="timeline-item-icon" style>
-    <a href="/contributor/{{ urlize $name }}">
+    <a href="{{ absURL "contributor" }}/{{ urlize $name }}/">
       <img src={{ $avatar_url }} class="rounded-5 d-block img-fluid bg-light">
     </a>
   </span>
@@ -16,20 +20,20 @@
     <div class="card" id="issuecomment-{{ .id | string }}">
       <div class="card-header d-flex justify-content-between">
         <span>
-          <a href="/contributor/{{ urlize $name }}" class="text-decoration-none text-reset"><b>{{ $name }}</b></a>
+          <a href="{{ absURL "contributor" }}/{{ urlize $name }}/" class="text-decoration-none text-reset"><b>{{ $name }}</b></a>
           commented at {{ .created_at | time.Format ":time_short" }} on {{ .created_at | time.Format ":date_long" }}:
         </span>
         <span>
           <span class="badge">{{ lower .author_association }}</span>
             <span>
-              <a href="https://github.com/bitcoin/bitcoin/pull/{{ .number }}#issuecomment-{{ .id | string }}" class="text-decoration-none text-reset px-1">
+              <a href="https://github.com/{{ .owner }}/{{ .repository }}/pull/{{ .number }}#issuecomment-{{ .id | string }}" class="text-decoration-none text-reset px-1">
                 <svg width="14" height="14" fill="currentColor">
-                  <use xlink:href="/img/bootstrap-icons.svg#box-arrow-up-right"/>
+                  <use xlink:href="{{ absURL "img" }}/bootstrap-icons.svg#box-arrow-up-right"/>
                 </svg>
               </a>
               <a href="#issuecomment-{{ .id | string }}" class="text-decoration-none text-reset px-1">
                 <svg width="14" height="14" fill="currentColor">
-                  <use xlink:href="/img/bootstrap-icons.svg#share"/>
+                  <use xlink:href="{{ absURL "img" }}/bootstrap-icons.svg#share"/>
                 </svg>
               </a>
             </span>
