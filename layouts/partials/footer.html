@@ -1,3 +1,33 @@
 <hr>
 
-footer
+<div class="row text-center my-3">
+    <div class="col-lg-6">
+        <!-- This part of the footer is static -->
+        <span class="my-auto">
+            <a target="_blank" rel="noopener" href="https://github.com/0xb10c/github-metadata-mirror" class="text-reset text-decoration-none">
+                <img src="{{absURL "img"}}/GitHub-Mark-64px.png" class="mx-1" width=32 height=32 alt="GitHub logo">
+                <span class="text-decoration-underline">github-metadata-mirror</span>
+            </a>
+            <br>
+            <br>
+            <span class="text-muted">
+                This is a metadata mirror of the GitHub repository
+                <a class="text-reset" target="_blank" rel="noopener" href="https://github.com/{{ $.Site.Params.owner }}/{{ $.Site.Params.repository }}">{{ $.Site.Params.owner }}/{{ $.Site.Params.repository }}</a>.
+                This site is not affiliated with GitHub.
+                Content is built from a <a target="_blank" rel="noopener" href="https://github.com/0xb10c/github-metadata-backup" class="text-reset text-decoration-none"><span class="text-decoration-underline">GitHub metadata backup</span></a>.
+            </span>
+            <br>
+
+        </span>
+    </div>
+    <div class="col-lg-6">
+        <span class="my-auto">
+            {{ safeHTML $.Site.Params.footer }}
+        </span>
+    </div>
+</div>
+<div class="row text-center text-muted">
+    <span class="col-12">
+        build: {{ dateFormat "2006-01-02 15:04 UTC" now.UTC }}
+    </span>
+</div>

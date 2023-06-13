@@ -11,7 +11,7 @@ title = "GitHub mirror" # FIXME
   # and to create local links to other mirrored issues and PRs
   owner = "placeholder-owner" # FIXME
   repository = "placeholder-repository" # FIXME
-
+  footer = "This mirror is hosted by PLACEHOLDER."
 
 [taxonomies]
   category = "contributor"
