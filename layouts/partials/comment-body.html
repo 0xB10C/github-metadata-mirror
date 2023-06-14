@@ -5,16 +5,13 @@
 
 {{ $baseURL := (absURL "") }}
 
-{{ $body := replaceRE `(\s|^)#([0-9]+)(\s|$)` (printf "$1[#$2 (local)](%s$2/)$3" $baseURL) .body }}
+{{ $body := replaceRE `(\s|^)#([0-9]+)(\s|$)` (printf "$1[#$2](%s$2/)$3" $baseURL) .body }}
+{{ $body = replaceRE `https://github.com/[a-zA-Z0-9-]+/[a-zA-Z0-9-]+/pull/([0-9]+)#issuecomment-([0-9]+)` (printf " [#$1 (comment)](%s$1/#issuecomment-$2)" $baseURL) $body }}
+{{ $body = replaceRE `https://github.com/[a-zA-Z0-9-]+/[a-zA-Z0-9-]+/pull/([0-9]+)#discussion_r([0-9]+)` (printf " [#$1 (review)](%s$1/#discussion_r$2)" $baseURL) $body }}
+{{ $body = replaceRE `\shttps://github.com/[a-zA-Z0-9-]+/[a-zA-Z0-9-]+/pull/([0-9]+)(\s|$|\.|,)` (printf " [#$1](%s$1/)$2" $baseURL) $body }}
+{{ $body = replaceRE `\shttps://github.com/[a-zA-Z0-9-]+/[a-zA-Z0-9-]+/issue/([0-9]+)(\s|$|\.|,)` (printf " [#$1](%s$1/)$2" $baseURL) $body }}
 
-{{ $body = replaceRE `\[([a-zA-Z0-9]+)\]\(https://github.com/[a-zA-Z0-9-]+/[a-zA-Z0-9-]+/pull/([0-9]+)#issuecomment-([0-9]+)` (printf " [$1](%s$2/#issuecomment-$3" $baseURL) $body }}
-
-{{ $body = replaceRE `https://github.com/[a-zA-Z0-9-]+/[a-zA-Z0-9-]+/pull/([0-9]+)#issuecomment-([0-9]+)` (printf " [#$1 (comment; local)](%s$1/#issuecomment-$2)" $baseURL) $body }}
-{{ $body = replaceRE `https://github.com/[a-zA-Z0-9-]+/[a-zA-Z0-9-]+/pull/([0-9]+)#discussion_r([0-9]+)` (printf " [#$1 (review; local)](%s$1/#discussion_r$2)" $baseURL) $body }}
-{{ $body = replaceRE `\shttps://github.com/[a-zA-Z0-9-]+/[a-zA-Z0-9-]+/pull/([0-9]+)(\s|$|\.|,)` (printf " [#$1 (local)](%s$1/)$2" $baseURL) $body }}
-{{ $body = replaceRE `\shttps://github.com/[a-zA-Z0-9-]+/[a-zA-Z0-9-]+/issue/([0-9]+)(\s|$|\.|,)` (printf " [#$1 (local)](%s$1/)$2" $baseURL) $body }}
-
-{{ $body = replaceRE `(\s|^)@([a-zA-Z0-9-]+)` (printf "[@$2 (local)](%scontributor/$2/)" $baseURL) $body }}
+{{ $body = replaceRE `(\s|^)@([a-zA-Z0-9-]+)` (printf " [@$2](%scontributor/$2/)" $baseURL) $body }}
 
 {{ range $result := strings.FindRE `/contributor/([a-zA-Z0-9-]+)/` $body }}
   {{ $body = replace $body $result (lower $result) }}
