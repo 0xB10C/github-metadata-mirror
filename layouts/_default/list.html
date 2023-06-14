@@ -1,6 +1,6 @@
 {{- define "main" -}}
 
-{{ $MAX_ENTRIES_RENDERED := 1000 }}
+{{ $MAX_ENTRIES_RENDERED := 100 }}
 
 {{ $entries := where .Site.RegularPages "Section" "entries" }}
 
@@ -8,20 +8,20 @@
   <h1>Recent Issues and PRs</h1>
 
   <div class="row">
+
+    {{ partialCached "search.html" . }}
     <div class="col-12 col-lg-8">
-      <div class="list-group">
-        {{ range (.Paginate (first $MAX_ENTRIES_RENDERED $entries )).Pages }}
+      <div class="input-group mb-3">
+        <input class="form-control" id="search-bar" type="search" placeholder="fuzzy search by title, contributor, and number" aria-label="Search">
+      </div>
+      <div class="list-group" id="search-results"></div>
+      <div class="list-group" id="static-recent">
+        {{ range (first 100 $entries ) }}
           {{ partial "list-item-entry.html" . }}
         {{ end }}
       </div>
-
-      <div class="position-relative my-3">
-        <nav class="position-absolute start-50 translate-middle-x">
-          {{ template "_internal/pagination.html" . }}
-        </nav>
-      </div>
-
     </div>
+
     <div class="col-12 col-lg-4">
       <a href="{{ "labels" | absURL }}" class="text-reset text-decoration-none"><b>Labels</b></a>
       <div class="justify-content-start d-flex flex-wrap">
@@ -159,35 +159,14 @@
       Labeled
       {{ partial "render-label.html" .Title }}
     </h2>
-    <div class="list-group list-group-flush">
+    <div class="list-group">
       {{ range .Paginator.Pages }}
         {{ partial "list-item-entry.html" . }}
       {{ end }}
     </div>
+  {{ else }}
     Unhandled Section
   {{ end }}
-
-
-{{ else if eq .Kind "section" }}
-
-  {{ $filter_pulls := where .Site.RegularPages ".Params.is_pr" true }}
-  {{ $filter_issues := where .Site.RegularPages ".Params.is_pr" false }}
-
-  {{ if eq .Section "issues" }}
-    {{ $entries = intersect $entries $filter_issues }}
-  {{ else if eq .Section "pulls" }}
-    {{ $entries = intersect $entries $filter_pulls }}
-  {{ end }}
-
-  {{ $entries = first $MAX_ENTRIES_RENDERED $entries }}
-
-  <h1>{{ .Title }}</h1>
-  <div class="list-group list-group-flush">
-    {{ range (.Paginate ( $entries )).Pages }}
-      {{ partial "list-item-entry.html" . }}
-    {{ end }}
-  </div>
-
 {{ else }}
 
   UNHANDLED KIND {{ .Kind }}

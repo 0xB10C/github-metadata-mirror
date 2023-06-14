@@ -1,0 +1,90 @@
+<template id="search-result">
+    <a href="#" id="link" class="list-group-item">
+        <span id="badge" class="badge">badge</span>
+        <span id="title" class="fw-bold">title</span>
+        <span id="number" class="text-mute"></span>
+        <br>
+        <b id="contributor"></b>
+        on
+        <span id="date"></span>
+        <small id="score" class="small text-mute"></small>
+    </a>
+</template>
+
+<script>
+    window.onload = function () {
+
+        const searchBar = document.querySelector("#search-bar");
+        const staticRecent = document.querySelector("#static-recent");
+        const searchResultTemplate = document.querySelector('#search-result');
+        const searchResults = document.querySelector('#search-results');
+
+        fetch('{{ absURL "index.json" }}')
+            .then((response) => response.json())
+            .then((index) => {
+
+                let miniSearch = new MiniSearch({
+                    idField: "number",
+                    fields: ["title", "contributor", "number", "state"],
+                    storeFields: ["title", "contributor", "number", "date", "state", "permalink"],
+                    searchOptions: {
+                        prefix: true,
+                        boost: { title: 2 },
+                        fuzzy: 0.2
+                    }
+                })
+
+                miniSearch.addAll(index)
+
+                async function showResults(results) {
+                    while (searchResults.firstChild) { searchResults.removeChild(searchResults.firstChild); }
+                    let resultsToDisplay = Math.min(100, results.length);
+                    for (let i = 0; i < resultsToDisplay; i++) {
+                        const clone = searchResultTemplate.content.cloneNode(true);
+                        const result = results[i];
+
+                        clone.querySelector("#title").innerHTML = result.title;
+                        clone.querySelector("#contributor").textContent = result.contributor;
+                        clone.querySelector("#date").textContent = result.date;
+                        clone.querySelector("#number").textContent = result.number;
+                        clone.querySelector("#link").href = result.permalink;
+                        clone.querySelector("#badge").textContent = result.is_pr ? "pull" : "issue";
+                        clone.querySelector("#badge").classList.add("state-" + result.state);
+
+                        const marker1 = "<span class='text-success-emphasis'>"
+                        const marker2 = "</span>"
+
+                        // overwrite text with marker if it matched
+                        if (result[0]) {
+                            // title matched
+                            clone.querySelector("#title").innerHTML = fuzzysort.highlight(result[0], marker1, marker2)
+                        }
+                        if (result[1]) {
+                            // contributor matched
+                            clone.querySelector("#contributor").innerHTML = fuzzysort.highlight(result[1], marker1, marker2)
+                        }
+                        if (result[2]) {
+                            // number matched
+                            clone.querySelector("#number").innerHTML = fuzzysort.highlight(result[2], marker1, marker2)
+                        }
+
+                        searchResults.appendChild(clone);
+                    }
+                }
+
+                async function handleEvent(event) {
+                    let term = event.target.value;
+                    if (term) {
+                        const results = miniSearch.search(term)
+                        staticRecent.classList.add("d-none");
+                        showResults(results)
+                    } else {
+                        while (searchResults.firstChild) { searchResults.removeChild(searchResults.firstChild); }
+                        staticRecent.classList.remove("d-none");
+                    }
+                }
+
+                searchBar.addEventListener("input", async (event) => { handleEvent(event) });
+            });
+    };
+</script>
