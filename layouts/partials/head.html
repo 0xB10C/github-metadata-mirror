@@ -4,12 +4,24 @@
 
   {{ hugo.Generator }}
 
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ absURL "img" }}/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ absURL "img" }}/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ absURL "img" }}/favicon-16x16.png">
+  <link rel="manifest" href="{{ absURL "" }}/site.webmanifest">
+  <link rel="mask-icon" href="{{ absURL "img" }}/safari-pinned-tab.svg" color="#5bbad5">
+  <link rel="shortcut icon" href="{{ absURL "img" }}/favicon.ico">
+  <meta name="apple-mobile-web-app-title" content="{{ .Site.Title }}">
+  <meta name="application-name" content="{{ .Site.Title }}">
+  <meta name="msapplication-TileColor" content="#00aba9">
+  <meta name="msapplication-config" content="{{ absURL "" }}/browserconfig.xml">
+  <meta name="theme-color" content="#ffffff">
+
+
   {{ with .Site.Params.description }}
     <meta name="description" content="{{ . }}">
   {{ end }}
 
   <link rel="stylesheet" href="{{ absURL "css/bootstrap.min.css" }}" />
-  <link rel="stylesheet" href="{{ absURL "css/bootstrap-icons.css" }}" />
   <script src="{{ absURL "js/bootstrap.min.js" }}"></script>
   <script src="{{ absURL "js/minisearch.js" }}"></script>
 
