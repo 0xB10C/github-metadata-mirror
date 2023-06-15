@@ -36,7 +36,7 @@
 
 {{ $markdownbody = replaceRE `(\s|^)([a-f0-9]{7,40})(\s|$|\W)` "$1<span class='font-monospace text-info'>$2</span>$3" $markdownbody }}
 
-{{ $markdownbody = replaceRE `(^|\s|\W)(ACK|utACK|tACK|ack|re-ack|reACK|NACK|NAck|nack|Concept ACK|crACK|cACK|Approach ACK|approach ACK|Code review ACK|Stale ACK)(\s|$|\W)` "$1<b class='text-warning'>$2</b>$3" $markdownbody }}
+{{ $markdownbody = replaceRE `(^|\s|\W)(ACK|utACK|tACK|ack|re-ack|reACK|NACK|NAck|nack|Concept ACK|Concept NACK|crACK|cACK|Approach NACK|Approach ACK|approach ACK|Code review ACK|Stale ACK)(\s|$|\W)` "$1<b class='text-warning'>$2</b>$3" $markdownbody }}
 
 {{ $markdownbody = replaceRE `<table>` "<div class='table-responsive'><table class='table'>" $markdownbody }}
 {{ $markdownbody = replaceRE `</table>` "</table></div>" $markdownbody }}
