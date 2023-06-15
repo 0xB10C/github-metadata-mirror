@@ -1,0 +1,216 @@
+
+{{ $is_page := .as_page }}
+
+{{ $baseURL := (absURL "") }}
+
+{{ $testcases := (slice
+  (dict
+    "body"      "normal text"
+    "expected"  "normal text"
+    "match"     true)
+  (dict
+    "body"      "normal text"
+    "expected"  "bad text"
+    "match"     false)
+  (dict
+    "body"      "See https://github.com/test-owner/test-repo/pull/20233 for details"
+    "expected"  (printf "See <a href=\"%s20233/\">#20233</a> for details" $baseURL )
+    "match"     true)
+  (dict
+    "body"      "See https://github.com/test-owner/test-repo/issues/1337: it is good"
+    "expected"  (printf "See <a href=\"%s1337/\">#1337</a>: it is good" $baseURL )
+    "match"     true)
+  (dict
+    "body"      "See https://github.com/test-owner/test-repo/issues/1337 for details"
+    "expected"  (printf "See <a href=\"%s1337/\">#1337</a> for details" $baseURL )
+    "match"     true)
+  (dict
+    "body"      "See https://github.com/test-owner/test-repo/pull/20233#issuecomment-715884174 for details"
+    "expected"  (printf "See <a href=\"%s20233/#issuecomment-715884174\">#20233 (comment)</a> for details" $baseURL )
+    "match"     true)
+  (dict
+    "body"      "my review from https://github.com/test-owner/test-repo/issues/20205#issuecomment-716544104,"
+    "expected"  (printf "my review from <a href=\"%s20205/#issuecomment-716544104\">#20205 (comment)</a>," $baseURL )
+    "match"     true)
+  (dict
+    "body"      "my review from https://github.com/test-owner/test-repo/pull/20205#issuecomment-716544104."
+    "expected"  (printf "my review from <a href=\"%s20205/#issuecomment-716544104\">#20205 (comment)</a>." $baseURL )
+    "match"     true)
+  (dict
+    "body"      "my review from https://github.com/test-owner/test-repo/pull/20205#issuecomment-716544104 abc"
+    "expected"  (printf "my review from <a href=\"%s20205/#issuecomment-716544104\">#20205 (comment)</a> abc" $baseURL )
+    "match"     true)
+  (dict
+    "body"      "my review from https://github.com/test-owner/test-repo/pull/20205#issuecomment-716544104!"
+    "expected"  (printf "my review from <a href=\"%s20205/#issuecomment-716544104\">#20205 (comment)</a>!" $baseURL )
+    "match"     true)
+  (dict
+    "body"      "interesting owner:repo name https://github.com/wrong-owner/wrong-repo/pull/20205#issuecomment-716544104!"
+    "expected"  (printf "interesting owner:repo name <a href=\"%s20205/#issuecomment-716544104\">#20205 (comment)</a>!" $baseURL )
+    "match"     false)
+  (dict
+    "body"      "files https://github.com/test-owner/test-repo/pull/20205/files-abc"
+    "expected"  "files <a href=\"https://github.com/test-owner/test-repo/pull/20205/files-abc\">https://github.com/test-owner/test-repo/pull/20205/files-abc</a>"
+    "match"     true)
+  (dict
+    "body"      "at https://github.com/test-owner/test-repo/pull/20233#discussion_r682768076."
+    "expected"  (printf "at <a href=\"%s20233/#discussion_r682768076\">#20233 (review)</a>." $baseURL )
+    "match"     true)
+  (dict
+    "body"      "[dergoegge](https://github.com/test-owner/test-repo/pull/27875#pullrequestreview-1477330163)"
+    "expected"  (printf "<a href=\"%s27875/#pullrequestreview-1477330163\">dergoegge</a>" $baseURL )
+    "match"     true)
+  (dict
+    "body"      "[hebasto](https://github.com/test-owner/test-repo/pull/27875#issuecomment-1589290446)"
+    "expected"  (printf "<a href=\"%s27875/#issuecomment-1589290446\">hebasto</a>" $baseURL )
+    "match"     true)
+  (dict
+    "body"      "@0xb10c "
+    "expected"  (printf "  <a href=\"%scontributor/0xb10c/\">@0xb10c</a>" $baseURL )
+    "match"     true)
+  (dict
+    "body"      "@test1 @test2"
+    "expected"  (printf "    <a href=\"%scontributor/test1/\">@test1</a> <a href=\"%scontributor/test2/\">@test2</a>" $baseURL $baseURL)
+    "match"     true)
+  (dict
+    "body"      "@test1 @test2 @test3"
+    "expected"  (printf "      <a href=\"%scontributor/test1/\">@test1</a> <a href=\"%scontributor/test2/\">@test2</a> <a href=\"%scontributor/test3/\">@test3</a>" $baseURL $baseURL $baseURL)
+    "match"     true)
+  (dict
+    "body"      "@test1?? @test2's @test3."
+    "expected"  (printf "      <a href=\"%scontributor/test1/\">@test1</a>?? <a href=\"%scontributor/test2/\">@test2</a>&rsquo;s <a href=\"%scontributor/test3/\">@test3</a>." $baseURL $baseURL $baseURL)
+    "match"     true)
+  (dict
+    "body"      "@test1@test2@test3."
+    "expected"  (printf "  <a href=\"%scontributor/test1/\">@test1</a>@test2@test3." $baseURL)
+    "match"     true)
+  (dict
+    "body"      "@t-bast"
+    "expected"  (printf "  <a href=\"%scontributor/t-bast/\">@t-bast</a>" $baseURL )
+    "match"     true)
+  (dict
+    "body"      "@MarkoFalke"
+    "expected"  (printf "  <a href=\"%scontributor/markofalke/\">@MarkoFalke</a>" $baseURL )
+    "match"     true)
+  (dict
+    "body"      "A-CK 1ac09b93cdb41eb7dbc1a62364363e59507da1af."
+    "expected"  "A-CK <span class='font-monospace text-info'>1ac09b93cdb41eb7dbc1a62364363e59507da1af</span>."
+    "match"     true)
+  (dict
+    "body"      "NA-CK 1ac09b93,"
+    "expected"  "NA-CK <span class='font-monospace text-info'>1ac09b93</span>,"
+    "match"     true)
+  (dict
+    "body"      "utA-CK 1ac09bb10c,"
+    "expected"  "utA-CK <span class='font-monospace text-info'>1ac09bb10c</span>,"
+    "match"     true)
+  (dict
+    "body"      "utACK commit"
+    "expected"  "<b class='text-warning'>utACK</b> commit"
+    "match"     true)
+  (dict
+    "body"      "tACK commit"
+    "expected"  "<b class='text-warning'>tACK</b> commit"
+    "match"     true)
+  (dict
+    "body"      "ACK commit"
+    "expected"  "<b class='text-warning'>ACK</b> commit"
+    "match"     true)
+  (dict
+    "body"      "NACK commit"
+    "expected"  "<b class='text-warning'>NACK</b> commit"
+    "match"     true)
+  (dict
+    "body"      "Concept ACK"
+    "expected"  "<b class='text-warning'>Concept ACK</b>"
+    "match"     true)
+  (dict
+    "body"      "Approach ACK"
+    "expected"  "<b class='text-warning'>Approach ACK</b>"
+    "match"     true)
+)}}
+
+{{ if eq $is_page true }}
+  <h2>Test cases for regex subsitutions</h2>
+
+  <div class="row">
+    <div class="col-1">
+      case
+    </div>
+    <div class="col-2">
+      should match
+    </div>
+    <div class="col-8">
+      case
+    </div>
+    <div class="col-1">
+      ok?
+    </div>
+  </div>
+{{ end }}
+
+{{ range $index, $case := $testcases }}
+  {{ $result := safeHTML (replace (partial "render-body.html" (dict "body" .body "owner" "test-owner" "repository" "test-repo" ) ) "\n" "") }}
+  {{ $expected := safeHTML (replace .expected "\n" "") }}
+  {{ if eq $is_page true }}
+    <div class="row {{ if ne (eq $expected $result) .match }} text-bg-danger {{ end }}">
+        <div class="col-1">
+          {{ $index }}
+        </div>
+        <div class="col-1">
+          {{ if eq .match true }}
+            match
+          {{ else }}
+            no match
+          {{ end }}
+        </div>
+        <div class="col-8">
+          <table class="table table-borderless">
+            <tr>
+              <td>Input</td>
+              <td>{{ printf "'%s'" .body }}</td>
+            </tr>
+            <tr>
+              <td>Expected</td>
+              <td>{{ printf "'%s'" .expected }}</td>
+            </tr>
+            <tr>
+              <td>Got</td>
+              <td>{{ printf "'%s'" $result }}</td>
+            </tr>
+          </table>
+        </div>
+        <div class="col-1">
+          {{ if eq (eq $expected $result) .match }}
+            <span class="badge text-bg-success">ok</span>
+          {{ else }}
+            <span class="badge text-bg-warning">bad</span>
+            {{ warnf "test-case %d is broken. See layouts/partials/regex-tests.html" $index }}
+            {{ warnf "Wanted: '%s'" .expected }}
+            {{ warnf "Got   : '%s'" $result }}
+          {{ end }}
+        </div>
+    </div>
+  {{ else }}
+    {{ if ne (eq $expected $result) .match }}
+      <div class="alert alert-warning" role="alert">
+        Regex test-case number {{ $index }} failed! The regex subsitutions are defined in "layouts/partials/render-body.html". See the <a class="text-warning" href="{{ absURL "regex-tests"}}">regex-tests</a> site for more information and please file an issue.
+        <table class="table table-borderless">
+          <tr>
+            <td>Input</td>
+            <td>{{ printf "'%s'" .body }}</td>
+          </tr>
+          <tr>
+            <td>Expected</td>
+            <td>{{ printf "'%s'" .expected }}</td>
+          </tr>
+          <tr>
+            <td>Got</td>
+            <td>{{ printf "'%s'" $result }}</td>
+          </tr>
+        </table>
+      </div>
+    {{ end }}
+  {{ end }}
+{{ end }}
+

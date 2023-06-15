@@ -5,8 +5,8 @@
 
 <body>
   {{ partialCached "nav.html" . }}
-
   <div class="container">
+    {{ partialCached "regex-tests.html" (dict "as_page" false) }}
     <article>
       {{ block "main" . }}{{ end }}
     </article>

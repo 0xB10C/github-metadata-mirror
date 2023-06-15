@@ -1,0 +1,44 @@
+{{/*
+- rewrite links to issues/pulls or comments to the local site
+- rewrite @username to contributor (best-effort)
+- make commit hashes stand out (40char, 10char, and 8 char, 7 char)
+- colorize ACK/NACK/Concept ACK/Approach ACK
+*/}}
+
+{{ $baseURL := (absURL "") }}
+{{ $o := .owner}}
+{{ $r := .repository }}
+{{ $body := .body }}
+
+{{/* This should be the first replacement as the following replacements would be overwritten by this. */}}
+{{ $body = replaceRE `(\s|^)#([0-9]+)(\s|$)` (printf "$1[#$2](%s$2/)$3" $baseURL) $body }}
+
+{{ $body = replaceRE (printf `\]\(https://github.com/%s/%s/pull/([0-9]+)#issuecomment-([0-9]+)\)` $o $r) (printf "](%s$1/#issuecomment-$2)" $baseURL) $body }}
+{{ $body = replaceRE (printf `\]\(https://github.com/%s/%s/issues/([0-9]+)#issuecomment-([0-9]+)\)` $o $r) (printf "](%s$1/#issuecomment-$2)" $baseURL) $body }}
+
+{{ $body = replaceRE (printf `\]\(https://github.com/%s/%s/pull/([0-9]+)#pullrequestreview-([0-9]+)\)` $o $r) (printf "](%s$1/#pullrequestreview-$2)" $baseURL) $body }}
+
+{{ $body = replaceRE (printf `(\s|^)https://github.com/%s/%s/pull/([0-9]+)#issuecomment-([0-9]+)` $o $r) (printf "$1[#$2 (comment)](%s$2/#issuecomment-$3)" $baseURL) $body }}
+{{ $body = replaceRE (printf `(\s|^)https://github.com/%s/%s/issues/([0-9]+)#issuecomment-([0-9]+)` $o $r) (printf "$1[#$2 (comment)](%s$2/#issuecomment-$3)" $baseURL) $body }}
+
+{{ $body = replaceRE (printf `(\s|^)https://github.com/%s/%s/pull/([0-9]+)#discussion_r([0-9]+)` $o $r) (printf "$1[#$2 (review)](%s$2/#discussion_r$3)" $baseURL) $body }}
+
+{{/* The ([^\/0-9]) makes sure not to match 12321/files or /commits URLs */}}
+{{ $body = replaceRE (printf `(\s|^)https://github.com/%s/%s/pull/([0-9]+)([^\/0-9])` $o $r) (printf "$1[#$2](%s$2/)$3" $baseURL) $body }}
+{{ $body = replaceRE (printf `(\s|^)https://github.com/%s/%s/issues/([0-9]+)([^\/0-9])` $o $r) (printf "$1[#$2](%s$2/)$3" $baseURL) $body }}
+
+{{ $body = replaceRE `(\s|^)+@([a-zA-Z0-9-]+)(\s|$|\.|,|@|\?|\')*?` (printf "$1[@$2](%scontributor/$2/)$3" $baseURL) $body }}
+{{ range $result := strings.FindRE `/contributor/([a-zA-Z0-9-]+)/` $body }}
+  {{ $body = replace $body $result (lower $result) }}
+{{ end }}
+
+{{ $markdownbody := $body | markdownify }}
+
+{{ $markdownbody = replaceRE `(\s|^)([a-f0-9]{7,40})(\s|$|\W)` "$1<span class='font-monospace text-info'>$2</span>$3" $markdownbody }}
+
+{{ $markdownbody = replaceRE `(^|\s|\W)(ACK|utACK|tACK|ack|re-ack|reACK|NACK|NAck|nack|Concept ACK|crACK|cACK|Approach ACK|approach ACK|Code review ACK|Stale ACK)(\s|$|\W)` "$1<b class='text-warning'>$2</b>$3" $markdownbody }}
+
+{{ $markdownbody = replaceRE `<table>` "<div class='table-responsive'><table class='table'>" $markdownbody }}
+{{ $markdownbody = replaceRE `</table>` "</table></div>" $markdownbody }}
+
+{{- safeHTML $markdownbody -}}

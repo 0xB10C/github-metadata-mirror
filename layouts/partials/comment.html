@@ -41,7 +41,7 @@
         </span>
       </div>
       <div class="card-body py-2 body-text text-decoration-none">
-        {{ partial "comment-body.html" . }}
+        {{ partial "render-body.html" (dict "body" .body "owner" .owner "repository" .repository ) }}
         {{/* partial "reactions.html" .event.reactions */}}
       </div>
     </div>
