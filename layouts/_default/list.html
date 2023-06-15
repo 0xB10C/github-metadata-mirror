@@ -113,7 +113,7 @@
     <p>
       <img src="{{ (index .Page.Data.category 0).Params.avatar_url }}" width=96 class="img-fluid rounded-5 mx-3 bg-light" alt="{{ .Page.Title }} profile picture">
       <span class="h2">{{ .Title }}</span>
-      <a href="https://github.com/{{ .Title }}" class="text-decoration-none fs-4 text-reset">
+      <a target="_blank" rel="noopener" href="https://github.com/{{ .Title }}" class="text-decoration-none fs-4 text-reset">
         <svg width="16" height="16" fill="currentColor">
           <use xlink:href="{{ absURL "img" }}/bootstrap-icons.svg#box-arrow-up-right"/>
         </svg>
