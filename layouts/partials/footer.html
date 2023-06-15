@@ -5,7 +5,9 @@
         <!-- This part of the footer is static -->
         <span class="my-auto">
             <a target="_blank" rel="noopener" href="https://github.com/0xb10c/github-metadata-mirror" class="text-reset text-decoration-none">
-                <img src="{{absURL "img"}}/GitHub-Mark-64px.png" class="mx-1" style="filter: invert(1);" width=32 height=32 alt="GitHub logo">
+                <svg width=32 height=32 fill="currentColor" alt="GitHub logo">
+                    <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#git"/>
+                </svg>
                 <span class="text-decoration-underline">github-metadata-mirror</span>
             </a>
             <br>
