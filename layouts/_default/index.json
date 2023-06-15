@@ -1,7 +1,11 @@
 {{- $.Scratch.Add "index" slice -}}
 
 {{- range .Site.RegularPages -}}
-    {{- $.Scratch.Add "index" (dict "title" .Title "labels" .Params.labels "is_pr" .Params.is_pr "contributor" .Params.contributor "number" (printf "#%s" (string .Params.number)) "date" (.Params.date.Format "January 2, 2006" ) "state" .Params.state "permalink" .Permalink) -}}
+    {{ $type := "issue" }}
+    {{ if eq .Params.is_pr true }}
+     {{ $type = "pull" }}
+    {{ end }}
+    {{- $.Scratch.Add "index" (dict "title" .Title "labels" .Params.labels "is_pr" .Params.is_pr "type" $type "contributor" .Params.contributor "number" (printf "#%s" (string .Params.number)) "date" (.Params.date.Format "January 2, 2006" ) "state" .Params.state "permalink" .Permalink) -}}
 {{- end -}}
 
 {{- $.Scratch.Get "index" | jsonify -}}
