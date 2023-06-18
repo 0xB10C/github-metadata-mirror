@@ -13,6 +13,18 @@
     "expected"  "bad text"
     "match"     false)
   (dict
+    "body"      "a whlie (see #20487) it is time"
+    "expected"  (printf "a whlie (see <a href=\"%s20487/\">#20487</a>) it is time" $baseURL )
+    "match"     true)
+  (dict
+    "body"      "a whlie (see #20487) it is time"
+    "expected"  (printf "a whlie (see <a href=\"%s20487/\">#20487</a>) it is time" $baseURL )
+    "match"     true)
+    (dict
+    "body"      "See e.g. #24659 #24369 #24340 #23555."
+    "expected"  (printf "See e.g. <a href=\"%s24659/\">#24659</a> <a href=\"%s24369/\">#24369</a> <a href=\"%s24340/\">#24340</a> <a href=\"%s23555/\">#23555</a>." $baseURL $baseURL $baseURL $baseURL )
+    "match"     true)
+  (dict
     "body"      "See https://github.com/test-owner/test-repo/pull/20233 for details"
     "expected"  (printf "See <a href=\"%s20233/\">#20233</a> for details" $baseURL )
     "match"     true)

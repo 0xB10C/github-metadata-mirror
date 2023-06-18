@@ -11,7 +11,7 @@
 {{ $body := .body }}
 
 {{/* This should be the first replacement as the following replacements would be overwritten by this. */}}
-{{ $body = replaceRE `(\s|^)#([0-9]+)(\s|$)` (printf "$1[#$2](%s$2/)$3" $baseURL) $body }}
+{{ $body = replaceRE `(\s|^)#([0-9]+)` (printf "$1[#$2](%s$2/)" $baseURL) $body }}
 
 {{ $body = replaceRE (printf `\]\(https://github.com/%s/%s/pull/([0-9]+)#issuecomment-([0-9]+)\)` $o $r) (printf "](%s$1/#issuecomment-$2)" $baseURL) $body }}
 {{ $body = replaceRE (printf `\]\(https://github.com/%s/%s/issues/([0-9]+)#issuecomment-([0-9]+)\)` $o $r) (printf "](%s$1/#issuecomment-$2)" $baseURL) $body }}
