@@ -57,6 +57,10 @@
     "expected"  (printf "my review from <a href=\"%s20205/#issuecomment-716544104\">#20205 (comment)</a>!" $baseURL )
     "match"     true)
   (dict
+    "body"      "on the mailinglist ([#28132 (comment)](https://github.com/test-owner/test-repo/pull/28132#issuecomment-1657206487)).\n"
+    "expected"  (printf "on the mailinglist (<a href=\"%s28132/#issuecomment-1657206487\">#28132 (comment)</a>).\n" $baseURL )
+    "match"     true)
+  (dict
     "body"      "interesting owner:repo name https://github.com/wrong-owner/wrong-repo/pull/20205#issuecomment-716544104!"
     "expected"  (printf "interesting owner:repo name <a href=\"%s20205/#issuecomment-716544104\">#20205 (comment)</a>!" $baseURL )
     "match"     false)
@@ -189,6 +193,10 @@
             <tr>
               <td>Got</td>
               <td>{{ printf "'%s'" $result }}</td>
+            </tr>
+            <tr>
+              <td>markdown</td>
+              <td>{{ $result }}</td>
             </tr>
           </table>
         </div>

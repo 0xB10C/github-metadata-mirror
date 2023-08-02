@@ -13,6 +13,7 @@
 {{/* This should be the first replacement as the following replacements would be overwritten by this. */}}
 {{ $body = replaceRE `(\s|^)#([0-9]+)` (printf "$1[#$2](%s$2/)" $baseURL) $body }}
 
+{{/* Replace the ](https://github.com/bitcoin/bitcoin/pull/28132#issuecomment-1657206487) part of a markdown-formatted issue-link */}}
 {{ $body = replaceRE (printf `\]\(https://github.com/%s/%s/pull/([0-9]+)#issuecomment-([0-9]+)\)` $o $r) (printf "](%s$1/#issuecomment-$2)" $baseURL) $body }}
 {{ $body = replaceRE (printf `\]\(https://github.com/%s/%s/issues/([0-9]+)#issuecomment-([0-9]+)\)` $o $r) (printf "](%s$1/#issuecomment-$2)" $baseURL) $body }}
 
