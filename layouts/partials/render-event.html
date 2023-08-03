@@ -492,6 +492,23 @@
       on {{ $event.created_at | time.Format ":date_medium" }}
     </div>
   </li>
+{{ else if eq $event.event "cross-referenced" }}
+  <li class="timeline-item my-1">
+    <span class="timeline-item-icon">
+      <span class="timeline-item-icon-circle">
+        <svg width="16" height="16" fill="currentColor">
+          <use xlink:href="{{ absURL "img/bootstrap-icons.svg" }}#box-arrow-in-down-right"/>
+        </svg>
+      </span>
+    </span>
+    <div class="timeline-item-description">
+      <b>{{ $name }}</b> cross-referenced this
+      on {{ $event.created_at | time.Format ":date_medium" }}
+      from {{ $event.source.type }}
+      <a class="text-decoration-none" href="{{ absURL "" }}/{{ $event.source.issue.number }}"><b>{{ $event.source.issue.title }}</b></a>
+      by <b>{{ $event.source.issue.user.login }}</b>
+    </div>
+  </li>
 {{ else }}
   <li class="timeline-item my-1">
     <span class="timeline-item-icon">
