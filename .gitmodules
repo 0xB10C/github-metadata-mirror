@@ -1,9 +1,0 @@
-[submodule "themes/fuji"]
-	path = themes/fuji
-	url = https://github.com/dsrkafuu/hugo-theme-fuji
-[submodule "data/data/bitcoin-gh-meta"]
-	path = data/data/bitcoin-gh-meta
-	url = https://github.com/zw/bitcoin-gh-meta.git
-[submodule "data/bitcoin-gh-meta"]
-	path = data/bitcoin-gh-meta
-	url = https://github.com/zw/bitcoin-gh-meta.git
