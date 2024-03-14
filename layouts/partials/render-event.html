@@ -42,7 +42,7 @@
           <details>
             <summary class="font-monospace">{{ $commit_head }}</summary>
             <code><pre>
-              {{- delimit $commit_message "\n" | markdownify -}}
+              {{- delimit $commit_message "\n" -}}
             </pre></code>
           </details>
         {{ end }}
