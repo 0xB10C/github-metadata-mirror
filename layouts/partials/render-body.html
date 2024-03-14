@@ -33,6 +33,13 @@
   {{ $body = replace $body $result (lower $result) }}
 {{ end }}
 
+{{/*
+  Curly bracketes right after starting a markdown code blocks might be interpreted as
+  an markdown attribute: https://github.com/gohugoio/hugo/issues/10835
+  If this is the case, adding a new line right after the code block starts fixes it.
+*/}}
+{{ $body = replaceRE "\x60\x60\x60(.+){(.*)\\r\\n" "```\n$1{$2\n" $body }}
+
 {{ $markdownbody := $body | markdownify }}
 
 {{ $markdownbody = replaceRE `(\s|^)([a-f0-9]{7,40})(\s|$|\W)` "$1<span class='font-monospace text-info'>$2</span>$3" $markdownbody }}
