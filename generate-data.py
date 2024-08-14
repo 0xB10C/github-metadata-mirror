@@ -123,13 +123,15 @@ def main():
 
     for issue_file in progressbar(issue_files, "issues"):
         issue = read_file(issue_file)
-        process_issue(issue, args.output)
+        frontmatter, data = process_issue(issue)
+        write(frontmatter, data, args.output)
 
     for pull_file in progressbar(pull_files, "pulls"):
         pull = read_file(pull_file)
-        process_pull(pull, args.output)
+        frontmatter, data = process_pull(pull)
+        write(frontmatter, data, args.output)
 
-def process_issue(i, output):
+def process_issue(i):
     issue = i["issue"]
     state = "open"
     if issue["state"] == "closed":
@@ -149,10 +151,10 @@ def process_issue(i, output):
         state,
         False,
     )
-    write(front, cleaned_data, output)
+    return front, cleaned_data
 
 
-def process_pull(p, output):
+def process_pull(p):
     pull = p["pull"]
     state = "open"
     if "merged_at" in pull and pull["merged_at"] != None:
@@ -175,7 +177,7 @@ def process_pull(p, output):
         state,
         True,
     )
-    write(front, cleaned_data, output)
+    return front, cleaned_data
 
 def write(front, data, output):
     with open(f"{output}/content/entries/{front.number}.md", "w") as f:
