@@ -167,6 +167,14 @@
   {{ else }}
     Unhandled Section
   {{ end }}
+{{ else if eq .Kind "section" }}
+  
+  {{ if eq .Section "graph" }}
+    {{ partial "graph.html" . }}
+  {{ else }}
+    UNHANDLED SECTION {{ .Section }}
+  {{ end }}
+
 {{ else }}
 
   UNHANDLED KIND {{ .Kind }}

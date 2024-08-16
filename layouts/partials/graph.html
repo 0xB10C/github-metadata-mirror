@@ -1,0 +1,87 @@
+<div id="graph-wrapper" class="container">
+    <div id="graph"></div>
+</div>
+
+<!-- TODO: vendor these -->
+<script src="//unpkg.com/force-graph"></script>
+<script src="//unpkg.com/d3-force"></script>
+<script src="//unpkg.com/d3-quadtree"></script>
+
+<script>
+    window.onload = function () {
+        function nodeColor(n) {
+            if (n.state == "merged" || n.state == "complete") {
+                return "#6610f2";
+            } else if (n.state == "draft") {
+                return "";
+            } else if (n.state == "closed") {
+                return "#6c757d";
+            } else if (n.state == "open") {
+                return "#188754";
+            }
+            return "black";
+        }
+
+        function nodeCanvasObject(node, ctx) {
+            const size = 12;
+            ctx.drawImage(node.img, node.x  - size / 2, node.y - size / 2, size, size);
+
+            ctx.beginPath();
+            if (node.is_pr) {
+                ctx.arc(node.x, node.y, 7, 0, Math.PI * 2, true);
+            } else {
+                ctx.rect(node.x - 7, node.y - 7, 14, 14);
+            }
+            ctx.strokeStyle = nodeColor(node);
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.fillStyle = "gray";
+            ctx.font = "12px monospace";
+            ctx.fillText("#" + node.number, node.x + 12, node.y + 4);
+        }
+
+        fetch('{{ absURL "graph.json" }}')
+            .then((response) => response.json())
+            .then((graph) => {
+
+            graph.nodes.forEach(n => {
+                const img = new Image();
+                img.src = n.avatar_url;
+                n.img = img;
+            });
+
+            let graphWrapper = document.getElementById('graph-wrapper')
+
+            console.log(graphWrapper.getBoundingClientRect())
+            
+            const Graph = ForceGraph()
+            (document.getElementById('graph'))
+                .graphData(graph)
+                .nodeId('number')
+                .nodeLabel(n => (n.is_pr ? "PR " : "Issue ") +  "#" + n.number + ": " + n.title)
+                .nodeColor(nodeColor)
+                .nodeVal(8)
+                .nodeAutoColorBy("state")
+                .linkSource('source')
+                .linkTarget('target')
+                .linkColor("#b10c00")
+                .warmupTicks(20)
+                .width(graphWrapper.getBoundingClientRect().width)
+                .height(graphWrapper.getBoundingClientRect().height * 0.8)
+                .d3Force('manybody', d3.forceManyBody().strength(-100))
+                .d3Force('collide', d3.forceCollide(20))
+                .d3Force('x', d3.forceX(0).strength(0.05))
+                .d3Force('y', d3.forceY(0).strength(0.05))
+                .backgroundColor("white")
+                .linkDirectionalArrowLength(6)
+                .linkDirectionalArrowRelPos(0.1)
+                .nodeCanvasObject(nodeCanvasObject)
+                .onNodeDragEnd(node => {
+                    node.fx = node.x;
+                    node.fy = node.y;
+                })
+                .onNodeClick(node => window.open(node.url, '_blank').focus())
+            });
+    };
+</script>
