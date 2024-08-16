@@ -14,10 +14,11 @@ two steps to this process.
 1. **Generate mirror content**: First, the Python script `generate-data.py` is
     used to generate MarkDown files into the `content` directory and JSON files
     into the `data` directory. Pass the folder with the backup as first argument
-    and the output directory as second argument.
+    and the output directory as second argument. Additionally, the `<owner>/<repository>`
+    needs to be specified.
 
 ```
-python generate-data.py /path/to/backup /path/to/project/directory
+python generate-data.py /path/to/backup /path/to/project/directory <owner>/<repository>
 ```
 
 2. **Build static site**: The second step is to use [Hugo] to build the static

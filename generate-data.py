@@ -108,6 +108,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", help="Path to the github metadata backup directory.")
     parser.add_argument("output", help="Path to the hugo content directory were the markdown files should be written to.")
+    parser.add_argument("ownerrepo", help="GitHub owner/repository. Used in the graph.json generation. Needs to be exaclty <owner>/<repository>.")
     parser.add_argument('-s', '--subset', action='store_true', help="Only process a small subset of the issues and pulls. Useful for testing purposes.")
     args = parser.parse_args()
 
@@ -121,16 +122,36 @@ def main():
         issue_files = issue_files[:min(len(issue_files), SUBSET_SIZE)]
         pull_files = pull_files[:min(len(pull_files), SUBSET_SIZE)]
 
+    graph = dict()
+    graph["nodes"] = list()
+    graph["links"] = list()
+
     for issue_file in progressbar(issue_files, "issues"):
         issue = read_file(issue_file)
         frontmatter, data = process_issue(issue)
+        graph["nodes"].append(frontmatter)
+        if "events" in data:
+            for event in data["events"]:
+                if event["event"] == "cross-referenced":
+                    if args.ownerrepo in event["source"]["issue"]["repository_url"]:
+                        graph["links"].append({"source": frontmatter.number, "target": event["source"]["issue"]["number"]})
         write(frontmatter, data, args.output)
-
+    
     for pull_file in progressbar(pull_files, "pulls"):
         pull = read_file(pull_file)
         frontmatter, data = process_pull(pull)
+        graph["nodes"].append(frontmatter)
+        if "events" in data:
+            for event in data["events"]:
+                if event["event"] == "cross-referenced":
+                    if args.ownerrepo in event["source"]["issue"]["repository_url"]:
+                        graph["links"].append({"source": frontmatter.number, "target": event["source"]["issue"]["number"]})
         write(frontmatter, data, args.output)
 
+    # write graph
+    write_graph(graph, args.output)
+
+    
 def process_issue(i):
     issue = i["issue"]
     state = "open"
@@ -186,6 +207,12 @@ def write(front, data, output):
     with open(f"{output}/data/{front.number}.json", "w") as f:
         json_data = json.dumps(data, default=lambda o: o.__dict__, sort_keys=True)
         f.write(json_data)
+        f.close()
+
+def write_graph(graph, output):
+    graph_json = json.dumps(graph, default=lambda o: o.__dict__, sort_keys=True, indent=2)
+    with open(f"{output}/static/graph.json", "w") as f:
+        f.write(graph_json)
         f.close()
 
 if __name__ == "__main__":

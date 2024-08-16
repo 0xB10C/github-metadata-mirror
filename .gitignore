@@ -2,3 +2,4 @@
 public
 resources
 data/*.json
+static/graph.json
