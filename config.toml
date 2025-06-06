@@ -1,5 +1,4 @@
 languageCode = 'en-us'
-paginate = 100
 timeout = "60s"
 disableKinds = ["RSS"]
 
@@ -12,6 +11,9 @@ title = "GitHub mirror" # FIXME
   owner = "placeholder-owner" # FIXME
   repository = "placeholder-repository" # FIXME
   footer = "This mirror is hosted by PLACEHOLDER."
+
+[pagination]
+  pagerSize = 100
 
 [taxonomies]
   category = "contributor"
