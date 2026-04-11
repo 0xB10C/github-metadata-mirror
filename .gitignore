@@ -1,6 +1,4 @@
-.hugo_build.lock
 public
-resources
 data/*.json
 static/graph.json
 */__pycache__

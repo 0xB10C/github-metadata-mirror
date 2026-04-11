@@ -1,7 +1,0 @@
-{{ $is_pr := $.Page.Params.is_pr }}
-
-{{ if eq $is_pr true }}
-  {{ partial "render-pull.html" . }}
-{{ else }}
-  {{ partial "render-issue.html" . }}
-{{ end }}
