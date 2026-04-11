@@ -3,3 +3,5 @@ public
 resources
 data/*.json
 static/graph.json
+*/__pycache__
+__pycache__
