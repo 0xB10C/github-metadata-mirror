@@ -1,5 +1,0 @@
-{{ range $label := .Params.labels }}
-  <a href="{{ absURL "labels"}}/{{ $label | urlize }}/" class="text-decoration-none mx-1">
-    {{ partialCached "render-label.html" $label $label }}
-  </a>
-{{ end }}
