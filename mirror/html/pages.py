@@ -91,12 +91,14 @@ def render_entry_page(
     data: dict[str, Any],
     config: Config,
     md: MarkdownRenderer,
+    linked: list[EntryMeta] | None = None,
 ) -> str:
     """Render a single issue or PR page."""
+    _linked = linked or []
     if meta.is_pr:
-        content = _render_pull_content(meta, data, config, md)
+        content = _render_pull_content(meta, data, config, md, _linked)
     else:
-        content = _render_issue_content(meta, data, config, md)
+        content = _render_issue_content(meta, data, config, md, _linked)
     return base_page(f"{meta.title} #{meta.number}", content, config)
 
 
@@ -105,6 +107,7 @@ def _render_issue_content(
     data: dict[str, Any],
     config: Config,
     md: MarkdownRenderer,
+    linked: list[EntryMeta],
 ) -> str:
     """Render issue page content (port of partials/render-issue.html)."""
     b = config.base_url
@@ -139,7 +142,7 @@ def _render_issue_content(
     events_html = "\n".join(events_html_parts)
 
     # Sidebar
-    sidebar = _render_sidebar(contributors, meta, issue, config)
+    sidebar = _render_sidebar(contributors, meta, issue, config, linked=linked)
 
     return f"""\
 <div class="container">
@@ -147,8 +150,11 @@ def _render_issue_content(
   <h1 class="h3">
     <span class="text-light">{html_escape(meta.title)}</span>
     <span class="text-muted fw-thin">#{meta.number}</span>
-    <a target="_blank" rel="noopener" href="https://github.com/{config.owner}/{config.repository}/issues/{meta.number}" class="text-decoration-none fs-4 text-reset">
+    <a target="_blank" rel="noopener" href="https://github.com/{config.owner}/{config.repository}/issues/{meta.number}" class="text-decoration-none fs-4 text-reset" title="View on GitHub">
       {svg_icon(b, "box-arrow-up-right")}
+    </a>
+    <a href="{b}graph/?start={meta.number}" class="text-decoration-none fs-4 text-reset" title="View in graph">
+      {svg_icon(b, "diagram-2")}
     </a>
   </h1>
   <span>
@@ -181,6 +187,7 @@ def _render_pull_content(
     data: dict[str, Any],
     config: Config,
     md: MarkdownRenderer,
+    linked: list[EntryMeta],
 ) -> str:
     """Render PR page content (port of partials/render-pull.html)."""
     b = config.base_url
@@ -249,7 +256,7 @@ def _render_pull_content(
 """
 
     # Sidebar
-    sidebar = _render_sidebar(contributors, meta, pull, config, reviewers_html)
+    sidebar = _render_sidebar(contributors, meta, pull, config, reviewers_html, linked=linked)
 
     # Tabs
     tabs = f"""\
@@ -281,8 +288,11 @@ def _render_pull_content(
   <h1 class="h3">
     <span class="text-light">{html_escape(meta.title)}</span>
     <span class="text-muted fw-thin">#{meta.number}</span>
-    <a href="https://github.com/{config.owner}/{config.repository}/issues/{meta.number}" class="text-decoration-none text-reset fs-4">
+    <a href="https://github.com/{config.owner}/{config.repository}/issues/{meta.number}" class="text-decoration-none text-reset fs-4" title="View on GitHub">
       {svg_icon(b, "box-arrow-up-right")}
+    </a>
+    <a href="{b}graph/?start={meta.number}" class="text-decoration-none text-reset fs-4" title="View in graph">
+      {svg_icon(b, "diagram-2")}
     </a>
   </h1>
   <span>
@@ -318,15 +328,26 @@ def _render_pull_content(
 """
 
 
+def _sidebar_section(title: str, items_html: str) -> str:
+    return (
+        f'<div class="mx-3 mt-2 mb-1">'
+        f'<small class="text-muted">{title}</small>'
+        f'<div class="list-group list-group-flush mt-0">{items_html}</div>'
+        f'</div>'
+    )
+
+
 def _render_sidebar(
     contributors: list[dict[str, Any]],
     meta: EntryMeta,
     item: dict[str, Any],
     config: Config,
     extra_html: str = "",
+    linked: list[EntryMeta] | None = None,
 ) -> str:
-    """Render the right sidebar: contributors, labels, milestone, optional extras."""
+    """Render the right sidebar: contributors, labels, milestone, linked items."""
     b = config.base_url
+    linked = linked or []
 
     # Deduplicate contributors by login
     seen: set[str] = set()
@@ -344,20 +365,21 @@ def _render_sidebar(
         login = c.get("login", "unknown")
         avatar = c.get("avatar_url", "?")
         contrib_parts.append(
-            f'<a href="{b}contributor/{login.lower()}/" class="d-inline-block text-decoration-none text-reset m-1">'
-            f'<img src="{avatar}" class="img-fluid rounded-5" width=24>'
-            f'<span class="text-reset text-decoration-none">{html_escape(login)}</span></a>'
+            f'<a href="{b}contributor/{login.lower()}/" '
+            f'class="list-group-item list-group-item-action border-0 text-decoration-none text-reset d-flex align-items-center gap-2 py-1 px-2">'
+            f'<img src="{avatar}" class="img-fluid rounded-5 flex-shrink-0" width=20>'
+            f'<span>{html_escape(login)}</span></a>'
         )
 
     labels_html = ""
     if meta.labels:
-        labels_html = f"""\
-      <p class="m-3">
-        <span>Labels</span>
-        <br>
-        <span>{issue_labels(meta.labels, b)}</span>
-      </p>
-"""
+        label_items = "".join(
+            f'<a href="{b}labels/{urlize(name)}/" '
+            f'class="list-group-item list-group-item-action border-0 text-decoration-none text-reset py-1 px-2">'
+            f'{render_label(name)}</a>'
+            for name in meta.labels
+        )
+        labels_html = _sidebar_section("Labels", label_items)
 
     milestone_html = ""
     if item.get("milestone"):
@@ -372,15 +394,32 @@ def _render_sidebar(
       </p>
 """
 
+    linked_html = ""
+    if linked:
+        graph_link = (
+            f'<a href="{b}graph/?start={meta.number}" class="text-reset">'
+            f'<small>view graph</small>'
+            f'</a>'
+        )
+        items_html = "".join(
+            f'<a href="{b}{e.number}/" '
+            f'class="list-group-item list-group-item-action border-0 overflow-hidden text-decoration-none text-reset d-flex align-items-center gap-2 py-1 px-2">'
+            f'<span class="flex-shrink-0 badge state-{e.state} state-dot"></span>'
+            f'<span class="text-truncate">'
+            f'<small class="text-muted">#{e.number}</small> {html_escape(e.title)}'
+            f'</span>'
+            f'</a>'
+            for e in linked
+        )
+        linked_html = _sidebar_section(f"Linked ({graph_link})", items_html)
+
+    contributors_html = "".join(contrib_parts)
     return f"""\
-      <p class="m-3">
-        <label>Contributors</label>
-        <br>
-          {"".join(contrib_parts)}
-        </p>
+      {_sidebar_section("Contributors", contributors_html)}
       {extra_html}
       {labels_html}
       {milestone_html}
+      {linked_html}
 """
 
 

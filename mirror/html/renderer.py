@@ -79,10 +79,24 @@ class SiteRenderer:
 
     def _render_entries(self) -> None:
         """Render each issue/PR page. Re-reads full JSON one at a time."""
+        # Build undirected adjacency: number -> set of linked numbers.
+        linked: dict[int, set[int]] = {}
+        for link in self.index.graph.links:
+            src, tgt = link["source"], link["target"]
+            linked.setdefault(src, set()).add(tgt)
+            linked.setdefault(tgt, set()).add(src)
+
         total = len(self.index.entries)
         for i, meta in enumerate(self.index.entries):
             if (i + 1) % 100 == 0 or i == 0 or i == total - 1:
                 print(f"Rendering entries... {i + 1}/{total}", end="\r", flush=True)
+
+            # Resolve linked EntryMeta objects (only those present in the index).
+            linked_entries = sorted(
+                (self.index.by_number[n] for n in linked.get(meta.number, set())
+                 if n in self.index.by_number),
+                key=lambda e: e.number,
+            )
 
             # Re-read full JSON
             data = _read_json(meta.json_path)
@@ -91,7 +105,7 @@ class SiteRenderer:
             if meta.is_pr and "comments" in data:
                 build_pull_timeline(data)
 
-            html = render_entry_page(meta, data, self.config, self.md)
+            html = render_entry_page(meta, data, self.config, self.md, linked_entries)
             self._write(self.config.output_dir / str(meta.number) / "index.html", html)
 
             del data  # Release memory

@@ -57,6 +57,13 @@ table, td, th {
   padding: 0.4em;
 }
 
+.state-dot {
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border-radius: 50%;
+}
+
 .state-complete {
   background-color: var(--bs-indigo) !important;
   color: var(--bs-light);
@@ -314,10 +321,48 @@ def search_script(config: Config) -> str:
 
 
 def graph_script(config: Config) -> str:
-    """Return the force-graph JS (port of partials/graph.html)."""
+    """Return the force-graph JS.
+
+    Reads ?start=N from the URL. The graph starts with that node and its
+    immediate neighbours rendered as cards. Clicking a card expands its hidden
+    neighbours; ctrl/cmd-clicking opens the issue/PR page.
+    """
     b = config.base_url
     return f"""\
-<div id="graph-wrapper" class="container">
+<style>
+/* Break out of Bootstrap container so the graph uses the full viewport width. */
+#graph-wrapper {{
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    margin-left: -50vw;
+    height: calc(100vh - 120px);
+    min-height: 400px;
+    background: #0d1117;
+}}
+#graph-controls {{
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 10;
+}}
+#graph-hint {{
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    font-size: 0.78em;
+    color: #555;
+    pointer-events: none;
+}}
+</style>
+
+<div id="graph-wrapper">
+    <div id="graph-controls">
+        <button id="btn-reset" class="btn btn-sm btn-outline-secondary">Reset</button>
+    </div>
+    <span id="graph-hint">click card to open &middot; click &ldquo;Load +N connected&rdquo; to expand</span>
     <div id="graph"></div>
 </div>
 
@@ -326,80 +371,311 @@ def graph_script(config: Config) -> str:
 <script src="//unpkg.com/d3-quadtree"></script>
 
 <script>
-    window.onload = function () {{
-        function nodeColor(n) {{
-            if (n.state == "merged" || n.state == "complete") {{
-                return "#6610f2";
-            }} else if (n.state == "draft") {{
-                return "";
-            }} else if (n.state == "closed") {{
-                return "#6c757d";
-            }} else if (n.state == "open") {{
-                return "#188754";
-            }}
-            return "black";
+window.onload = function () {{
+    const params = new URLSearchParams(window.location.search);
+    const startNum = params.has('start') ? parseInt(params.get('start')) : null;
+
+    if (startNum === null) {{
+        document.getElementById('graph').innerHTML =
+            '<p style="color:#888;padding:2em;">Open this graph from an issue or PR page.</p>';
+        document.getElementById('btn-reset').style.display = 'none';
+        return;
+    }}
+
+    // Card dimensions in graph-space pixels.
+    const CW = 240, CH = 78, CR = 4;
+
+    function stateColor(n) {{
+        if (n.state === "merged" || n.state === "complete") return "#6610f2";
+        if (n.state === "draft") return "#6c757d";
+        if (n.state === "closed") return "#dc3545";
+        if (n.state === "open") return "#188754";
+        return "#444";
+    }}
+
+    // Draw a rounded rectangle path (no fill/stroke — caller decides).
+    function roundRect(ctx, x, y, w, h, r) {{
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.arcTo(x + w, y,     x + w, y + r,     r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+        ctx.lineTo(x + r, y + h);
+        ctx.arcTo(x,     y + h, x,     y + h - r, r);
+        ctx.lineTo(x,     y + r);
+        ctx.arcTo(x,     y,     x + r, y,          r);
+        ctx.closePath();
+    }}
+
+    // Truncate text to fit maxWidth pixels on the given ctx.
+    function truncate(ctx, text, maxWidth) {{
+        if (ctx.measureText(text).width <= maxWidth) return text;
+        let lo = 0, hi = text.length;
+        while (lo < hi) {{
+            const mid = (lo + hi + 1) >> 1;
+            ctx.measureText(text.slice(0, mid) + '\u2026').width <= maxWidth ? lo = mid : hi = mid - 1;
         }}
+        return text.slice(0, lo) + '\u2026';
+    }}
 
-        function nodeCanvasObject(node, ctx) {{
-            const size = 12;
-            ctx.drawImage(node.img, node.x  - size / 2, node.y - size / 2, size, size);
-
-            ctx.beginPath();
-            if (node.is_pr) {{
-                ctx.arc(node.x, node.y, 7, 0, Math.PI * 2, true);
+    // Word-wrap text into lines, each no wider than maxWidth pixels.
+    function wrapText(ctx, text, maxWidth) {{
+        const words = text.split(' ');
+        const lines = [];
+        let current = '';
+        for (const word of words) {{
+            const test = current ? current + ' ' + word : word;
+            if (current && ctx.measureText(test).width > maxWidth) {{
+                lines.push(current);
+                current = word;
             }} else {{
-                ctx.rect(node.x - 7, node.y - 7, 14, 14);
+                current = test;
             }}
-            ctx.strokeStyle = nodeColor(node);
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            ctx.fillStyle = "gray";
-            ctx.font = "12px monospace";
-            ctx.fillText("#" + node.number, node.x + 12, node.y + 4);
         }}
+        if (current) lines.push(current);
+        return lines;
+    }}
 
-        fetch('{b}graph.json')
-            .then((response) => response.json())
-            .then((graph) => {{
+    // Height of the expand-button strip at the bottom of each card.
+    const EXPAND_H = 18;
 
-            graph.nodes.forEach(n => {{
-                const img = new Image();
-                img.src = n.avatar_url;
-                n.img = img;
+    fetch('{b}graph.json')
+        .then(r => r.json())
+        .then(raw => {{
+            // Keep original numeric src/tgt — ForceGraph mutates link objects
+            // during simulation, replacing numbers with node references.
+            const allNodes = raw.nodes;
+            const allLinks = raw.links.map(l => ({{ src: l.source, tgt: l.target }}));
+            const nodeMap = new Map(allNodes.map(n => [n.number, n]));
+
+            // Lazy-load avatar images on first access.
+            const imgs = new Map();
+            function getImg(num, url) {{
+                if (!imgs.has(num)) {{
+                    const img = new Image();
+                    img.src = url;
+                    imgs.set(num, img);
+                }}
+                return imgs.get(num);
+            }}
+
+            // Undirected adjacency map: number -> Set<number>.
+            // Only include links where BOTH endpoints exist in allNodes so we
+            // never add phantom neighbors (cross-refs outside the data set) to
+            // the visible set or pass orphan links to ForceGraph.
+            const adj = new Map();
+            allLinks.forEach(l => {{
+                if (!nodeMap.has(l.src) || !nodeMap.has(l.tgt)) return;
+                if (!adj.has(l.src)) adj.set(l.src, new Set());
+                if (!adj.has(l.tgt)) adj.set(l.tgt, new Set());
+                adj.get(l.src).add(l.tgt);
+                adj.get(l.tgt).add(l.src);
             }});
 
-            let graphWrapper = document.getElementById('graph-wrapper')
+            // Place nums sorted ascending in a circle of given radius around (cx, cy).
+            // Only sets position for nodes that haven't been placed yet.
+            const RING_R = 320;
+            function placeInRing(nums, cx, cy) {{
+                const sorted = [...nums].sort((a, b) => a - b);
+                const count = sorted.length || 1;
+                sorted.forEach((num, i) => {{
+                    const n = nodeMap.get(num);
+                    if (n && n.x == null) {{
+                        const angle = (2 * Math.PI * i) / count - Math.PI / 2;
+                        n.x = cx + RING_R * Math.cos(angle);
+                        n.y = cy + RING_R * Math.sin(angle);
+                    }}
+                }});
+            }}
 
-            const Graph = ForceGraph()
-            (document.getElementById('graph'))
-                .graphData(graph)
+            let visible = new Set();
+
+            function initVisible() {{
+                visible = new Set([startNum]);
+                // Reset all positions so re-init starts fresh.
+                allNodes.forEach(n => {{
+                    delete n.x; delete n.y; delete n.vx; delete n.vy;
+                    delete n.fx; delete n.fy;
+                }});
+                // Pre-position start node at origin.
+                const startNode = nodeMap.get(startNum);
+                if (startNode) {{ startNode.x = 0; startNode.y = 0; }}
+            }}
+            initVisible();
+
+            // Expand hidden neighbours of a node, placing them in a ring around it.
+            function expandNode(node) {{
+                const neighbors = adj.get(node.number) || new Set();
+                const newNums = [...neighbors].filter(n => !visible.has(n));
+                if (newNums.length === 0) return false;
+                newNums.forEach(n => visible.add(n));
+                placeInRing(newNums, node.x ?? 0, node.y ?? 0);
+                return true;
+            }}
+
+            // Fresh node/link arrays for the current visible set. Links are new
+            // objects each call so ForceGraph doesn't see stale mutated references.
+            function getGraphData() {{
+                return {{
+                    nodes: allNodes.filter(n => visible.has(n.number)),
+                    links: allLinks
+                        .filter(l => visible.has(l.src) && visible.has(l.tgt))
+                        .map(l => ({{ source: l.src, target: l.tgt }})),
+                }};
+            }}
+
+            function nodeCanvasObject(node, ctx) {{
+                const x = node.x - CW / 2, y = node.y - CH / 2;
+                const color = stateColor(node);
+                const isStart = node.number === startNum;
+                const neighbors = adj.get(node.number) || new Set();
+                let hiddenCount = 0;
+                for (const n of neighbors) if (!visible.has(n)) hiddenCount++;
+
+                // Card background.
+                roundRect(ctx, x, y, CW, CH, CR);
+                ctx.fillStyle = isStart ? "#2d333b" : "#1c2128";
+                ctx.fill();
+
+                // Outer border — brighter for the start node.
+                roundRect(ctx, x, y, CW, CH, CR);
+                ctx.strokeStyle = isStart ? "#768390" : "#30363d";
+                ctx.lineWidth = isStart ? 2 : 1;
+                ctx.stroke();
+
+                // Left state strip (6px) — plain rect clipped to the card's left rounded corners.
+                ctx.save();
+                roundRect(ctx, x, y, CW, CH, CR);
+                ctx.clip();
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, 6, CH);
+                ctx.restore();
+
+                const textX = x + 14;
+                const av = 20;
+                const avX = x + CW - av - 8, avY = y + 8;
+
+                // Avatar (clipped circle, top-right).
+                const img = getImg(node.number, node.avatar_url);
+                if (img && img.complete && img.naturalWidth > 0) {{
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(avX + av / 2, avY + av / 2, av / 2, 0, Math.PI * 2);
+                    ctx.clip();
+                    ctx.drawImage(img, avX, avY, av, av);
+                    ctx.restore();
+                }}
+
+                // State badge (colored pill, left of avatar).
+                const stateLabel = node.state.charAt(0).toUpperCase() + node.state.slice(1);
+                ctx.font = "bold 9px sans-serif";
+                const badgeW = ctx.measureText(stateLabel).width + 10;
+                const badgeX = avX - badgeW - 6, badgeY = avY + 3;
+                roundRect(ctx, badgeX, badgeY, badgeW, 15, 3);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.fillStyle = "#fff";
+                ctx.fillText(stateLabel, badgeX + 5, badgeY + 11);
+
+                // Number row: "#1234  PR/Issue".
+                ctx.font = "bold 11px monospace";
+                ctx.fillStyle = "#8b949e";
+                ctx.fillText("#" + node.number, textX, y + 20);
+                const numW = ctx.measureText("#" + node.number).width;
+                ctx.font = "10px sans-serif";
+                ctx.fillStyle = "#555";
+                ctx.fillText(node.is_pr ? "PR" : "Issue", textX + numW + 5, y + 20);
+
+                // Title — word-wrapped to 2 lines, third line truncated.
+                ctx.font = "11px sans-serif";
+                ctx.fillStyle = "#e6edf3";
+                const titleW = CW - 14 - 8; // strip + margins
+                const lines = wrapText(ctx, node.title, titleW);
+                ctx.fillText(lines[0], textX, y + 38);
+                if (lines.length > 1) {{
+                    const line2 = lines.length > 2
+                        ? truncate(ctx, lines.slice(1).join(' '), titleW)
+                        : lines[1];
+                    ctx.fillText(line2, textX, y + 54);
+                }}
+
+                // Expand button strip along the bottom of the card.
+                if (hiddenCount > 0) {{
+                    const by = y + CH - EXPAND_H;
+                    // Separator line.
+                    ctx.strokeStyle = "#30363d";
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(x + 6, by);
+                    ctx.lineTo(x + CW, by);
+                    ctx.stroke();
+                    // Strip background on hover hint.
+                    ctx.fillStyle = "#21262d";
+                    ctx.fillRect(x + 6, by, CW - 6, EXPAND_H);
+                    // Label.
+                    ctx.font = "bold 9px sans-serif";
+                    ctx.fillStyle = "#768390";
+                    const label = "Load +" + hiddenCount + " connected";
+                    ctx.fillText(label, x + 14, by + 13);
+                }}
+            }}
+
+            // Hit area matches the card rectangle for accurate hover/click.
+            function nodePointerAreaPaint(node, color, ctx) {{
+                ctx.fillStyle = color;
+                ctx.fillRect(node.x - CW / 2, node.y - CH / 2, CW, CH);
+            }}
+
+            const wrapper = document.getElementById('graph-wrapper');
+            const G = ForceGraph()(document.getElementById('graph'))
+                .graphData(getGraphData())
                 .nodeId('number')
-                .nodeLabel(n => (n.is_pr ? "PR " : "Issue ") +  "#" + n.number + ": " + n.title)
-                .nodeColor(nodeColor)
-                .nodeVal(8)
-                .nodeAutoColorBy("state")
+                .nodeLabel(() => '')
+                .nodeCanvasObject(nodeCanvasObject)
+                .nodeCanvasObjectMode(() => 'replace')
+                .nodePointerAreaPaint(nodePointerAreaPaint)
                 .linkSource('source')
                 .linkTarget('target')
-                .linkColor("#b10c00")
-                .warmupTicks(20)
-                .width(graphWrapper.getBoundingClientRect().width)
-                .height(graphWrapper.getBoundingClientRect().height * 0.8)
-                .d3Force('manybody', d3.forceManyBody().strength(-100))
-                .d3Force('collide', d3.forceCollide(20))
-                .d3Force('x', d3.forceX(0).strength(0.05))
-                .d3Force('y', d3.forceY(0).strength(0.05))
-                .backgroundColor("white")
+                .linkColor(() => "#b10c00")
                 .linkDirectionalArrowLength(6)
                 .linkDirectionalArrowRelPos(0.1)
-                .nodeCanvasObject(nodeCanvasObject)
-                .onNodeDragEnd(node => {{
-                    node.fx = node.x;
-                    node.fy = node.y;
-                }})
-                .onNodeClick(node => window.open(node.url, '_blank').focus())
+                .warmupTicks(40)
+                .width(wrapper.getBoundingClientRect().width)
+                .height(wrapper.getBoundingClientRect().height)
+                // Moderate repulsion — strong enough to separate cards, weak enough
+                // that the link spring can keep connected nodes on screen.
+                .d3Force('manybody', d3.forceManyBody().strength(-400))
+                .d3Force('collide', d3.forceCollide(Math.sqrt((CW / 2) ** 2 + (CH / 2) ** 2) + 20))
+                .d3Force('x', d3.forceX(0).strength(0.05))
+                .d3Force('y', d3.forceY(0).strength(0.05))
+                .backgroundColor("#0d1117")
+                .onNodeDragEnd(node => {{ node.fx = node.x; node.fy = node.y; }})
+                .onNodeClick((node, event) => {{
+                    const neighbors = adj.get(node.number) || new Set();
+                    let hiddenCount = 0;
+                    for (const n of neighbors) if (!visible.has(n)) hiddenCount++;
+
+                    // Convert click position to graph space and check if it landed
+                    // in the expand strip at the bottom of the card.
+                    if (hiddenCount > 0) {{
+                        const gp = G.screen2GraphCoords(event.offsetX, event.offsetY);
+                        const cardBottom = node.y + CH / 2;
+                        if (gp.y >= cardBottom - EXPAND_H) {{
+                            if (expandNode(node)) G.graphData(getGraphData());
+                            return;
+                        }}
+                    }}
+                    // Card body — open the page.
+                    window.open(node.url, '_blank');
+                }});
+
+            document.getElementById('btn-reset').addEventListener('click', () => {{
+                initVisible();
+                G.graphData(getGraphData());
             }});
-    }};
+        }});
+}};
 </script>
 """
 

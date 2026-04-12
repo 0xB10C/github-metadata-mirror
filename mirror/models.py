@@ -39,6 +39,7 @@ class SiteIndex:
     """In-memory index built during Pass 1. Used by all renderers."""
 
     entries: list[EntryMeta] = field(default_factory=list)  # sorted by date desc
+    by_number: dict[int, EntryMeta] = field(default_factory=dict)  # number -> entry
     by_contributor: dict[str, list[EntryMeta]] = field(default_factory=dict)  # lowercase login -> entries
     by_label: dict[str, list[EntryMeta]] = field(default_factory=dict)  # label name -> entries
     contributor_avatars: dict[str, str] = field(default_factory=dict)  # lowercase login -> avatar URL
