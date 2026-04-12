@@ -159,7 +159,7 @@ def _render_issue_content(
   <span>
     <span class="h4">{badge}</span>
       <a href="{b}contributor/{user_login_lower}/" class="text-decoration-none text-reset"><b>{html_escape(user_login)}</b></a>
-      openend this issue on
+      opened this issue on
       {date_str}
   </span>
   <hr class="my-2">
