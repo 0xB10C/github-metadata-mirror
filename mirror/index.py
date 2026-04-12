@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -18,21 +19,70 @@ def _read_json(path: Path) -> dict[str, Any]:
         return json.load(f)
 
 
+# Bots whose cross-references are noise and should be excluded from the graph.
+_GRAPH_EXCLUDED_ACTORS = frozenset({"drahtbot"})
+
+# Matches any GitHub issue/PR URL: captures (owner, repo, number).
+_RE_GITHUB_URL = re.compile(
+    r"https?://github\.com/([^/\s]+)/([^/\s#]+)/(?:issues|pull)/(\d+)"
+)
+# Matches standalone #NNN references (same-repo convention on GitHub).
+# Applied only after GitHub URLs have been stripped from the body.
+_RE_BODY_REF = re.compile(r"(?<!\w)#(\d+)(?!\d)")
+
+
 def _extract_graph_links(
     data: dict[str, Any], source_number: int, owner_repo: str,
+    body: str | None = None,
 ) -> list[dict[str, int]]:
-    """Extract cross-reference links from events for the graph."""
+    """Extract cross-reference links for the graph.
+
+    Sources:
+    - cross-referenced events (GitHub records these on the *target* when
+      something references it, so they capture incoming links)
+    - same-repo GitHub URLs in the body (cross-referenced events are sometimes
+      absent from backups; URL parsing fills the gap for outgoing links)
+    - plain #NNN references in the body (same-repo convention on GitHub)
+    """
+    seen: set[int] = set()
     links: list[dict[str, int]] = []
+
     for event in data.get("events", []):
         if event.get("event") != "cross-referenced":
             continue
+        actor = (event.get("actor") or {}).get("login", "")
+        if actor.lower() in _GRAPH_EXCLUDED_ACTORS:
+            continue
         source_issue = event.get("source", {}).get("issue", {})
         repo_url = source_issue.get("repository_url", "")
-        if owner_repo in repo_url:
-            links.append({
-                "source": source_number,
-                "target": source_issue["number"],
-            })
+        target = source_issue.get("number")
+        if target and owner_repo in repo_url and target not in seen:
+            seen.add(target)
+            links.append({"source": source_number, "target": target})
+
+    if body:
+        owner_lower, repo_lower = (s.lower() for s in owner_repo.split("/", 1))
+
+        def _on_github_url(m: re.Match) -> str:
+            # Strip every GitHub URL regardless of repo; only record same-repo ones.
+            if m.group(1).lower() == owner_lower and m.group(2).lower() == repo_lower:
+                target = int(m.group(3))
+                if target != source_number and target not in seen:
+                    seen.add(target)
+                    links.append({"source": source_number, "target": target})
+            return ""
+
+        # Pass 1: full GitHub URLs. Strip them all so their numbers are not
+        # picked up by the plain #NNN scan below.
+        cleaned = _RE_GITHUB_URL.sub(_on_github_url, body)
+
+        # Pass 2: plain #NNN references in the URL-stripped body.
+        for m in _RE_BODY_REF.finditer(cleaned):
+            target = int(m.group(1))
+            if target != source_number and target not in seen:
+                seen.add(target)
+                links.append({"source": source_number, "target": target})
+
     return links
 
 
@@ -71,8 +121,9 @@ def build_index(config: Config) -> SiteIndex:
             "is_pr": False,
             "url": f"{config.base_url}{meta.number}/",
         })
+        body = (data.get("issue") or {}).get("body") or ""
         index.graph.links.extend(
-            _extract_graph_links(data, meta.number, owner_repo)
+            _extract_graph_links(data, meta.number, owner_repo, body)
         )
 
         _index_entry(index, meta)
@@ -97,8 +148,9 @@ def build_index(config: Config) -> SiteIndex:
             "is_pr": True,
             "url": f"{config.base_url}{meta.number}/",
         })
+        body = (data.get("pull") or {}).get("body") or ""
         index.graph.links.extend(
-            _extract_graph_links(data, meta.number, owner_repo)
+            _extract_graph_links(data, meta.number, owner_repo, body)
         )
 
         _index_entry(index, meta)
@@ -113,7 +165,9 @@ def build_index(config: Config) -> SiteIndex:
 
 
 def _index_entry(index: SiteIndex, meta: EntryMeta) -> None:
-    """Add an entry to the contributor and label indexes."""
+    """Add an entry to the contributor, label, and number indexes."""
+    index.by_number[meta.number] = meta
+
     login_lower = meta.contributor.lower()
     index.by_contributor.setdefault(login_lower, []).append(meta)
     index.contributor_avatars[login_lower] = meta.avatar_url
