@@ -195,6 +195,7 @@ def nav_html(config: Config) -> str:
         <a class="nav-link" href="{b}labels/">Labels</a>
         <a class="nav-link" href="{b}contributors/">Contributors</a>
       </div>
+      <span class="navbar-text text-muted small">Built {format_datetime_utc()}</span>
     </div>
   </div>
 </nav>
