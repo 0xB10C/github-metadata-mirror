@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+      - run: pip install mistune pytest
+      - run: python -m pytest tests/ -v
+
+  build-secp256k1-mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+      - run: pip install mistune
+      - name: Clone secp256k1 backup
+        run: git clone --depth 1 https://github.com/bitcoin-data/github-metadata-backup-bitcoin-core-secp256k1.git backup
+      - name: Build mirror
+        run: |
+          python build.py \
+            --input backup \
+            --output public \
+            --title "secp256k1 GitHub Mirror" \
+            --owner bitcoin-core \
+            --repository secp256k1
+      - name: Verify output
+        run: |
+          test -f public/index.html
+          test -f public/index.json
+          test -f public/graph.json
+          test -d public/contributors
+          test -d public/labels
+          echo "Output contains $(find public -name '*.html' | wc -l) HTML files"
