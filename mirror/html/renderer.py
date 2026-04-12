@@ -63,13 +63,13 @@ class SiteRenderer:
             if src.is_dir():
                 if dst.exists():
                     shutil.rmtree(dst)
-                shutil.copytree(src, dst)
+                shutil.copytree(src, dst, copy_function=shutil.copy)
 
         # Copy root-level static files
         for name in ("site.webmanifest", "browserconfig.xml"):
             src = static_src / name
             if src.is_file():
-                shutil.copy2(src, out / name)
+                shutil.copy(src, out / name)
 
     def _render_home(self) -> None:
         print("Rendering home page...")
