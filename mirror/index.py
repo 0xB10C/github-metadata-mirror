@@ -9,7 +9,7 @@ from typing import Any
 
 from mirror.config import Config
 from mirror.data import extract_issue_meta, extract_pull_meta
-from mirror.models import EntryMeta, GraphData, SiteIndex
+from mirror.models import EntryMeta, SiteIndex
 
 SUBSET_SIZE = 100
 

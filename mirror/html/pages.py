@@ -11,7 +11,6 @@ from mirror.util import format_date_long, html_escape, urlize
 from mirror.html.components import (
     comment_card,
     issue_badge,
-    issue_labels,
     list_item_entry,
     render_label,
     svg_icon,

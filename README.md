@@ -67,14 +67,18 @@ nginx, caddy, or any other web server to host them.
 
 ## Development
 
-Tests use Python's built-in `unittest` and require no additional dependencies:
+### Tests
+
+Tests use Python's built-in `unittest` and require `pytest`:
 
 ```
-python -m unittest discover -s tests/
+pip install pytest
+python -m pytest tests/ -v
 ```
 
-For verbose output:
+### Linting
 
 ```
-python -m unittest discover -s tests/ -v
+pip install ruff
+ruff check .
 ```
