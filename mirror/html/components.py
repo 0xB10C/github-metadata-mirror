@@ -372,6 +372,9 @@ def timeline_event(
     if ev == "unlocked":
         return _simple_event(b, "unlock-fill", f"<b>{html_escape(name)}</b> unlocked this {date_str}")
 
+    if ev == "user_blocked":
+        return _simple_event(b, "person-x-fill", f"<b>{html_escape(name)}</b> blocked a user {date_str}")
+
     if ev == "head_ref_deleted":
         return _simple_event(b, "trash-fill", f"<b>{html_escape(name)}</b> deleted the branch {date_str}")
 
