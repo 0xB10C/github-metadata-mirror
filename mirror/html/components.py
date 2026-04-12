@@ -431,10 +431,6 @@ def review_card(
     b = config.base_url
     first = comments[0]
 
-    name = "unknown"
-    if first.get("user") is not None:
-        name = first["user"].get("login", "unknown")
-
     # Extract line number from hunk header: @@ -48,6 +61,33 @@
     hunk = first.get("diff_hunk", "")
     line_number = _extract_hunk_line_number(hunk)

@@ -166,7 +166,7 @@ class TestExtractGraphLinksBody(unittest.TestCase):
     def test_hash_ref_multiple(self) -> None:
         body = "Relates to #10, #20, and #30."
         links = _extract_graph_links({}, 42, "owner/repo", body)
-        targets = {l["target"] for l in links}
+        targets = {lk["target"] for lk in links}
         self.assertEqual(targets, {10, 20, 30})
 
     def test_hash_ref_deduplicated(self) -> None:
@@ -201,7 +201,7 @@ class TestExtractGraphLinksBody(unittest.TestCase):
         # Event brings in 99, body brings in 100 → both present.
         data = {"events": [_xref_event(99, "owner/repo")]}
         links = _extract_graph_links(data, 42, "owner/repo", body="#100 is related.")
-        targets = {l["target"] for l in links}
+        targets = {lk["target"] for lk in links}
         self.assertEqual(targets, {99, 100})
 
 
