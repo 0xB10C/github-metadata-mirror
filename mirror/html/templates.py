@@ -690,6 +690,7 @@ def base_page(title: str, content: str, config: Config) -> str:
 
 <body>
   {nav_html(config)}
+  <script>document.addEventListener('error',function(e){{if(e.target.tagName==='IMG')e.target.src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="96" height="96" rx="12" fill="%236c757d"/><text x="48" y="56" text-anchor="middle" fill="white" font-size="40">?</text></svg>'}},true)</script>
   <div class="container">
     <article>
       {content}
