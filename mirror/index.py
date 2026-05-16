@@ -160,6 +160,10 @@ def build_index(config: Config) -> SiteIndex:
 
     # Sort entries by date descending
     index.entries.sort(key=lambda e: e.date, reverse=True)
+    for entries in index.by_contributor.values():
+        entries.sort(key=lambda e: e.date, reverse=True)
+    for entries in index.by_label.values():
+        entries.sort(key=lambda e: e.date, reverse=True)
 
     return index
 
