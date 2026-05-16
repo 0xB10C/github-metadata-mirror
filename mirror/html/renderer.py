@@ -41,6 +41,8 @@ class SiteRenderer:
         self._render_graph()
         self._render_search_index()
         self._write_graph_json()
+        if self.config.markdown:
+            self._render_llms_txt()
 
     def _write(self, path: Path, content: str) -> None:
         """Write content to a file, creating parent directories as needed."""
@@ -164,6 +166,12 @@ class SiteRenderer:
             })
         json_str = json.dumps(entries, ensure_ascii=False, indent=None)
         self._write(self.config.output_dir / "index.json", json_str)
+
+    def _render_llms_txt(self) -> None:
+        """Write llms.txt at the site root pointing LLM agents at the .md layout."""
+        from mirror.markdown_page import render_llms_txt
+        print("Writing llms.txt...")
+        self._write(self.config.output_dir / "llms.txt", render_llms_txt(self.config))
 
     def _write_graph_json(self) -> None:
         """Write graph.json for the force-directed graph visualization."""

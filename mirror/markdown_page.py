@@ -24,6 +24,27 @@ SILENT_EVENTS = frozenset({
 })
 
 
+def render_llms_txt(config: Config) -> str:
+    """Render a root-level llms.txt descriptor pointing LLM agents at the markdown layout."""
+    repo_url = f"https://github.com/{config.owner}/{config.repository}"
+    return f"""# {config.title}
+
+> A mirror of GitHub issues and pull requests for [{config.owner}/{config.repository}]({repo_url}).
+
+## Layout
+
+- Each issue or PR has a plain-markdown document at `{config.base_url}{{number}}/index.md`.
+- Each document opens with YAML front matter (number, type, state, author, dates, labels, linked, participants, source URL).
+- The issue/PR body and every comment are preserved verbatim -- no link rewriting, no rendering.
+
+## Resources
+
+- [Search index]({config.base_url}index.json) -- MiniSearch JSON of every entry.
+- [Cross-reference graph]({config.base_url}graph.json) -- issue/PR link graph.
+- [Generator source](https://github.com/0xB10C/github-metadata-mirror) -- code that produced this mirror.
+"""
+
+
 def render_entry_markdown(
     meta: EntryMeta,
     data: dict[str, Any],
