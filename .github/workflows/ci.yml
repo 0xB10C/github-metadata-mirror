@@ -37,7 +37,8 @@ jobs:
             --output public \
             --title "secp256k1 GitHub Mirror" \
             --owner bitcoin-core \
-            --repository secp256k1
+            --repository secp256k1 \
+            --markdown
       - name: Verify output
         run: |
           test -f public/index.html
@@ -45,4 +46,9 @@ jobs:
           test -f public/graph.json
           test -d public/contributors
           test -d public/labels
-          echo "Output contains $(find public -name '*.html' | wc -l) HTML files"
+          test -f public/llms.txt
+          html_count=$(find public -mindepth 2 -maxdepth 2 -regextype posix-extended -regex 'public/[0-9]+/index\.html' | wc -l)
+          md_count=$(find public -mindepth 2 -maxdepth 2 -regextype posix-extended -regex 'public/[0-9]+/index\.md' | wc -l)
+          echo "Entry pages: $html_count HTML, $md_count Markdown"
+          test "$html_count" -gt 0
+          test "$html_count" = "$md_count"
