@@ -352,6 +352,13 @@ def _render_event(event: dict[str, Any]) -> str:
             f"column in a project -- {when}"
         )
 
+    if ev == "added_to_project_v2":
+        return _italic(f"@{name} added this to a project -- {when}")
+    if ev == "removed_from_project_v2":
+        return _italic(f"@{name} removed this from a project -- {when}")
+    if ev == "project_v2_item_status_changed":
+        return _italic(f"@{name} changed the project status -- {when}")
+
     return _italic(f"[unknown event: {ev}] @{name} -- {when}")
 
 

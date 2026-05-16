@@ -542,6 +542,32 @@ class TestSimpleEvents(unittest.TestCase):
         }])
         self.assertIn("*@alice force-pushed the base branch to deadbeefca -- 2024-01-17T10:00:00Z*", out)
 
+    def test_added_to_project_v2(self) -> None:
+        out = self._wrap([{
+            "event": "added_to_project_v2",
+            "created_at": "2025-05-10T15:27:50Z",
+            "actor": {"login": "fanquake"},
+        }])
+        self.assertIn("*@fanquake added this to a project -- 2025-05-10T15:27:50Z*", out)
+
+    def test_removed_from_project_v2(self) -> None:
+        out = self._wrap([{
+            "event": "removed_from_project_v2",
+            "created_at": "2025-05-10T15:27:50Z",
+            "actor": {"login": "fanquake"},
+        }])
+        self.assertIn("*@fanquake removed this from a project -- 2025-05-10T15:27:50Z*", out)
+
+    def test_project_v2_item_status_changed(self) -> None:
+        out = self._wrap([{
+            "event": "project_v2_item_status_changed",
+            "created_at": "2025-10-30T13:55:00Z",
+            "actor": {"login": "fanquake"},
+        }])
+        self.assertIn("*@fanquake changed the project status -- 2025-10-30T13:55:00Z*", out)
+        # Make sure the unknown-event fallback is not used
+        self.assertNotIn("unknown event", out)
+
     def test_cross_referenced(self) -> None:
         out = self._wrap([{
             "event": "cross-referenced",
