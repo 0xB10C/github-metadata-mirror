@@ -271,6 +271,15 @@ def timeline_event(
         curr = pc.get("column_name", "?")
         return _simple_event(b, "kanban-fill", f'<b>{html_escape(name)}</b> moved this from the "{html_escape(prev)}" to the "{html_escape(curr)}" column in a project') + "<hr>"
 
+    if ev == "added_to_project_v2":
+        return _simple_event(b, "kanban-fill", f"<b>{html_escape(name)}</b> added this to a project {date_str}")
+
+    if ev == "removed_from_project_v2":
+        return _simple_event(b, "kanban-fill", f"<b>{html_escape(name)}</b> removed this from a project {date_str}")
+
+    if ev == "project_v2_item_status_changed":
+        return _simple_event(b, "kanban-fill", f"<b>{html_escape(name)}</b> changed the project status {date_str}")
+
     if ev == "reopened":
         return (
             f'<li class="timeline-item my-1">'
