@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from mirror.config import Config
-from mirror.markdown_page import render_entry_markdown
+from mirror.markdown_page import _trim_diff_hunk, render_entry_markdown, render_llms_txt
 from mirror.models import EntryMeta
 
 
@@ -819,6 +819,23 @@ class TestBodyAndStructure(unittest.TestCase):
         out = render_entry_markdown(meta, data, _config(), [])
         # H1 is there, but no body content beyond it
         self.assertIn("# x (#42)", out)
+
+
+class TestLlmsTxt(unittest.TestCase):
+    def test_basic_content(self) -> None:
+        out = render_llms_txt(_config(title="My Mirror"))
+        self.assertTrue(out.startswith("# My Mirror\n"))
+        self.assertIn("[acme/widget](https://github.com/acme/widget)", out)
+        self.assertIn("`/{number}/index.md`", out)
+        self.assertIn("[Search index](/index.json)", out)
+        self.assertIn("[Cross-reference graph](/graph.json)", out)
+        self.assertIn("https://github.com/0xB10C/github-metadata-mirror", out)
+
+    def test_respects_base_url(self) -> None:
+        out = render_llms_txt(_config(base_url="/mirror/"))
+        self.assertIn("`/mirror/{number}/index.md`", out)
+        self.assertIn("[Search index](/mirror/index.json)", out)
+        self.assertIn("[Cross-reference graph](/mirror/graph.json)", out)
 
 
 if __name__ == "__main__":
