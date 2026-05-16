@@ -39,6 +39,7 @@ web server.
 - `--footer`: Optional footer HTML shown on every page.
 - `--base-url`: Base URL path if hosting in a subdirectory (e.g. `/mirror/`). Defaults to `/`.
 - `-s` / `--subset`: Only process the first 100 issues and 100 pull requests. Useful for testing.
+- `--markdown`: Also emit a plain-markdown `index.md` alongside each issue/PR `index.html`, intended for LLM consumption. Bodies are written verbatim with no link rewriting.
 
 ## Example
 

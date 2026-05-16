@@ -18,6 +18,7 @@ class Config:
     input_dir: Path
     output_dir: Path
     subset: bool = False
+    markdown: bool = False
 
     def __post_init__(self) -> None:
         # Ensure base_url always ends with /
