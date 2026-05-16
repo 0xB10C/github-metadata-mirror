@@ -107,6 +107,11 @@ class SiteRenderer:
             html = render_entry_page(meta, data, self.config, self.md, linked_entries)
             self._write(self.config.output_dir / str(meta.number) / "index.html", html)
 
+            if self.config.markdown:
+                from mirror.markdown_page import render_entry_markdown
+                md_text = render_entry_markdown(meta, data, self.config, linked_entries)
+                self._write(self.config.output_dir / str(meta.number) / "index.md", md_text)
+
             del data  # Release memory
 
         print(f"Rendering entries... {total}/{total} done")

@@ -65,6 +65,10 @@ def parse_args() -> argparse.Namespace:
         "-s", "--subset", action="store_true",
         help="Only process a small subset (for testing).",
     )
+    parser.add_argument(
+        "--markdown", action="store_true",
+        help="Also emit a plain-markdown index.md alongside each issue/PR index.html.",
+    )
     return parser.parse_args()
 
 
@@ -80,6 +84,7 @@ def main() -> None:
         input_dir=args.input,
         output_dir=args.output,
         subset=args.subset,
+        markdown=args.markdown,
     )
 
     # Ensure output directory exists
