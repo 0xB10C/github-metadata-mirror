@@ -12,6 +12,7 @@ from mirror.data import (
     extract_issue_meta,
     extract_pull_meta,
     build_pull_timeline,
+    drop_private_events,
 )
 
 
@@ -168,6 +169,38 @@ class TestBuildPullTimeline(unittest.TestCase):
         self.assertEqual(len(events), 2)
         self.assertEqual(len(events[0]["data"]), 2)  # hunk1 has 2 comments
         self.assertEqual(len(events[1]["data"]), 1)  # hunk2 has 1 comment
+
+
+class TestDropPrivateEvents(unittest.TestCase):
+    def test_drops_pending_reviews(self) -> None:
+        data = {"events": [
+            {"event": "reviewed", "state": "PENDING", "submitted_at": None, "body": "draft"},
+            {"event": "reviewed", "state": "APPROVED", "submitted_at": "2023-01-01T00:00:00Z"},
+        ]}
+        drop_private_events(data)
+        self.assertEqual(len(data["events"]), 1)
+        self.assertEqual(data["events"][0]["state"], "APPROVED")
+
+    def test_drops_referenced_without_commit(self) -> None:
+        data = {"events": [
+            {"event": "referenced", "commit_id": None, "commit_url": None},
+            {"event": "referenced", "commit_id": "abc", "commit_url": "http://..."},
+        ]}
+        drop_private_events(data)
+        self.assertEqual(len(data["events"]), 1)
+        self.assertEqual(data["events"][0]["commit_id"], "abc")
+
+    def test_keeps_other_events(self) -> None:
+        data = {"events": [
+            {"event": "closed", "created_at": "2023-01-01T00:00:00Z"},
+            {"event": "cross-referenced", "created_at": "2023-01-02T00:00:00Z"},
+        ]}
+        drop_private_events(data)
+        self.assertEqual(len(data["events"]), 2)
+
+    def test_no_events_key(self) -> None:
+        data = {"issue": {}}
+        self.assertEqual(drop_private_events(data), {"issue": {}})
 
 
 if __name__ == "__main__":
