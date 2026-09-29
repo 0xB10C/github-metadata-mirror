@@ -14,7 +14,6 @@ from typing import Any
 from mirror.config import Config
 from mirror.models import EntryMeta
 
-
 DIFF_HUNK_TAIL_LINES = 12
 
 

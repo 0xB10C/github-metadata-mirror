@@ -24,9 +24,9 @@ import time
 from pathlib import Path
 
 from mirror.config import Config
+from mirror.html.renderer import SiteRenderer
 from mirror.index import build_index
 from mirror.markdown import MarkdownRenderer
-from mirror.html.renderer import SiteRenderer
 
 
 def parse_args() -> argparse.Namespace:

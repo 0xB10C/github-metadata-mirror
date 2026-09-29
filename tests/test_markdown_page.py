@@ -11,16 +11,16 @@ from mirror.models import EntryMeta
 
 
 def _config(**kw) -> Config:
-    defaults = dict(
-        title="t",
-        owner="acme",
-        repository="widget",
-        footer="",
-        base_url="/",
-        input_dir=Path("/tmp/in"),
-        output_dir=Path("/tmp/out"),
-        markdown=True,
-    )
+    defaults = {
+        "title": "t",
+        "owner": "acme",
+        "repository": "widget",
+        "footer": "",
+        "base_url": "/",
+        "input_dir": Path("/tmp/in"),
+        "output_dir": Path("/tmp/out"),
+        "markdown": True,
+    }
     defaults.update(kw)
     return Config(**defaults)
 

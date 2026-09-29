@@ -9,9 +9,6 @@ from typing import Any
 
 from mirror.config import Config
 from mirror.data import build_pull_timeline, remove_nested_keys
-from mirror.markdown import MarkdownRenderer
-from mirror.models import SiteIndex
-from mirror.util import format_date_long, urlize
 from mirror.html.pages import (
     render_contributor_page,
     render_contributors_page,
@@ -21,6 +18,9 @@ from mirror.html.pages import (
     render_label_page,
     render_labels_page,
 )
+from mirror.markdown import MarkdownRenderer
+from mirror.models import SiteIndex
+from mirror.util import format_date_long, urlize
 
 
 class SiteRenderer:

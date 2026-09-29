@@ -6,12 +6,12 @@ import unittest
 from pathlib import Path
 
 from mirror.data import (
-    remove_nested_keys,
+    build_pull_timeline,
     determine_issue_state,
     determine_pull_state,
     extract_issue_meta,
     extract_pull_meta,
-    build_pull_timeline,
+    remove_nested_keys,
 )
 
 
