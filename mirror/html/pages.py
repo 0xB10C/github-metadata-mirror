@@ -5,9 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from mirror.config import Config
-from mirror.markdown import MarkdownRenderer
-from mirror.models import EntryMeta, SiteIndex
-from mirror.util import format_date_long, html_escape, urlize
 from mirror.html.components import (
     comment_card,
     issue_badge,
@@ -17,6 +14,9 @@ from mirror.html.components import (
     timeline_event,
 )
 from mirror.html.templates import base_page, graph_script, search_script
+from mirror.markdown import MarkdownRenderer
+from mirror.models import EntryMeta, SiteIndex
+from mirror.util import format_date_long, html_escape, urlize
 
 
 def render_home_page(index: SiteIndex, config: Config) -> str:

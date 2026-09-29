@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 import unittest
+from datetime import datetime, timezone
 
 from mirror.util import (
     fnv1a_32,
     format_date_long,
     format_date_medium,
-    format_time_short,
     format_datetime_utc,
+    format_time_short,
     html_escape,
-    urlize,
     truncate,
+    urlize,
 )
-from datetime import datetime, timezone
 
 
 class TestFnv1a32(unittest.TestCase):

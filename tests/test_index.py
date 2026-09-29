@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 from mirror.config import Config
-from mirror.index import build_index, _extract_graph_links
+from mirror.index import _extract_graph_links, build_index
 
 
 def _xref_event(number: int, repo_url: str, actor: str | None = None) -> dict:
