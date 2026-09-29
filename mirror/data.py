@@ -20,6 +20,40 @@ KEYS_TO_REMOVE = frozenset([
 ])
 
 
+def drop_private_events(data: dict[str, Any]) -> dict[str, Any]:
+    """Remove timeline events that GitHub shows only to some users, modifying data in place.
+
+    A backup made with a user's token gets events that are not public:
+    - that user's own unsubmitted reviews ("reviewed", state PENDING, submitted_at null);
+    - "referenced" events from commits in private repos the user can access. If the
+      token itself cannot read that repo, commit_id and commit_url are null.
+    Neither is shown to the public on GitHub, and neither has the data the renderers
+    expect, so both are dropped before anything reads the events.
+
+    This is a backstop, not a privacy boundary. It can only catch leaks where GitHub
+    itself withheld the payload from the backup token, which is what leaves the nulls
+    to key on. Token scope does not keep these events out of a backup: they are listed
+    for any token whose *account* can read the private repository, and restricting the
+    token to public repositories nulls the payload rather than hiding the event. A
+    token whose account can read that repository instead receives fully populated
+    events, indistinguishable from public ones, which are still published: a
+    "referenced" event then carries the private commit's sha and url, and a
+    "cross-referenced" event from a private repository carries that issue's number,
+    title and author. The reliable control is to back up with an account that cannot
+    see the private repositories at all.
+    """
+    events = data.get("events")
+    if events:
+        data["events"] = [e for e in events if not _is_private_event(e)]
+    return data
+
+
+def _is_private_event(e: dict[str, Any]) -> bool:
+    if e.get("event") == "reviewed" and e.get("state") == "PENDING":
+        return True
+    return e.get("event") == "referenced" and e.get("commit_id") is None
+
+
 def remove_nested_keys(obj: Any) -> Any:
     """Remove unneeded API keys to reduce size, modifying obj in place."""
     if isinstance(obj, dict):

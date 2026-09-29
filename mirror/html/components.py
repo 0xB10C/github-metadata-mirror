@@ -107,8 +107,11 @@ def comment_card(
     b = config.base_url
     name_lower = name.lower()
     assoc = (author_association or "").lower()
-    time_str = format_time_short(created_at)
-    date_str = format_date_long(created_at)
+    # created_at can be empty: a pending review has no submitted_at. Such events are
+    # dropped by drop_private_events, so this is a backstop (see the note there).
+    when_str = ""
+    if created_at:
+        when_str = f" at {format_time_short(created_at)} on {format_date_long(created_at)}"
     body_html = render_body(body, config, md)
 
     return f"""\
@@ -123,7 +126,7 @@ def comment_card(
       <div class="card-header d-flex justify-content-between">
         <span>
           <a href="{b}contributor/{name_lower}/" class="text-decoration-none text-reset"><b>{html_escape(name)}</b></a>
-          commented at {time_str} on {date_str}:
+          commented{when_str}:
         </span>
         <span>
           <span class="badge">{assoc}</span>
@@ -318,7 +321,7 @@ def timeline_event(
                 body=review_body,
                 number=number,
                 comment_id=event.get("id", ""),
-                created_at=event.get("submitted_at", event.get("created_at", "")),
+                created_at=event.get("submitted_at") or event.get("created_at") or "",
                 author_association=event.get("author_association"),
                 config=config,
                 md=md,
@@ -391,21 +394,26 @@ def timeline_event(
         return _simple_event(b, "arrow-clockwise", f"<b>{html_escape(name)}</b> restored the branch {date_str}")
 
     if ev == "referenced":
-        commit_url = event.get("commit_url", "")
+        # GitHub can send commit_url and commit_id as null rather than leaving them out
+        # (bitcoin/bitcoin events 30879047178 and 31722068529), so .get(key, "") is not
+        # enough. Render like markdown_page.py does: no link when there is no URL.
+        commit_url = event.get("commit_url") or ""
         # Rewrite API URL to web URL
         commit_url = commit_url.replace("api.", "").replace("/repos", "").replace("commits", "commit")
-        commit_id = truncate(event.get("commit_id", ""), 10)
+        commit_id = truncate(event.get("commit_id") or "", 10)
+        commit = f'<a href="{commit_url}">{commit_id}</a>' if commit_url else commit_id
         return _simple_event(b, "link-45deg",
-            f'<b>{html_escape(name)}</b> referenced this in commit '
-            f'<a href="{commit_url}">{commit_id}</a> {date_str}')
+            f'<b>{html_escape(name)}</b> referenced this in commit {commit} {date_str}')
 
     if ev == "cross-referenced":
-        source = event.get("source", {})
+        # Same null-vs-missing caveat as "referenced" above: guard with `or` rather
+        # than a .get default, matching markdown_page.py.
+        source = event.get("source") or {}
         source_type = source.get("type", "")
-        source_issue = source.get("issue", {})
+        source_issue = source.get("issue") or {}
         source_number = source_issue.get("number", "?")
         source_title = source_issue.get("title", "?")
-        source_user = source_issue.get("user", {}).get("login", "?")
+        source_user = (source_issue.get("user") or {}).get("login", "?")
         return _simple_event(b, "box-arrow-in-down-right",
             f"<b>{html_escape(name)}</b> cross-referenced this {date_str} "
             f'from {source_type} <a class="text-decoration-none" href="{b}{source_number}/">'

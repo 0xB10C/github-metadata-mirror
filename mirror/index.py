@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from mirror.config import Config
-from mirror.data import extract_issue_meta, extract_pull_meta
+from mirror.data import drop_private_events, extract_issue_meta, extract_pull_meta
 from mirror.models import EntryMeta, SiteIndex
 
 SUBSET_SIZE = 100
@@ -16,7 +16,7 @@ SUBSET_SIZE = 100
 
 def _read_json(path: Path) -> dict[str, Any]:
     with open(path, "r") as f:
-        return json.load(f)
+        return drop_private_events(json.load(f))
 
 
 # Bots whose cross-references are noise and should be excluded from the graph.

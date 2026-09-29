@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from mirror.config import Config
-from mirror.data import build_pull_timeline, remove_nested_keys
+from mirror.data import build_pull_timeline, drop_private_events, remove_nested_keys
 from mirror.markdown import MarkdownRenderer
 from mirror.models import SiteIndex
 from mirror.util import format_date_long, urlize
@@ -186,4 +186,4 @@ class SiteRenderer:
 
 def _read_json(path: Path) -> dict[str, Any]:
     with open(path, "r") as f:
-        return json.load(f)
+        return drop_private_events(json.load(f))
